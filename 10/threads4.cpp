@@ -11,8 +11,11 @@ condition_variable cond_var;
 mutex m;
 
 int main() {
+    // Two variables on the stack
     int value = 100;
     bool notified = false;
+
+    // Lambda function for thread 'reporter'
     thread reporter([&]() {
         unique_lock<mutex> lock(m);
         while (!notified) {
@@ -21,6 +24,7 @@ int main() {
         cout << "The value is " << value << endl;
     });
 
+    // Lambda function for thread 'assigner'
     thread assigner([&]() {
         value = 20;
         notified = true;
