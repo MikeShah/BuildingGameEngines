@@ -14,21 +14,32 @@ mutex accum_mutex;
 int accum = 0;
 
 void add(int x) {
-	accum_mutex.lock();
-    	accum += 1;
+    // Threads that do not currently hold the mutex
+    // must wait here and try to acquire the lock
+    accum_mutex.lock();
+    	accum += x;
 	accum_mutex.unlock();
 }
 
 int main() {
+    // Create a vector to hold all of our threads
     vector<thread> threads;
-    for (int i = 0; i <= THREAD_COUNT; i++) {
+
+    // Create THREAD_COUNT number of threads
+    for (int i = 0; i < THREAD_COUNT; i++) {
         threads.push_back(thread(&add, INCREMENT));
     }
 
+    // Join all of our threads with the main
+    // thread--thus waiting until our program
+    // finishes
     for (auto& th : threads) {
         th.join();
     }
+
+    // Report the result
     cout << "accum = " << accum << endl;
+
     return 0;
 }
 
