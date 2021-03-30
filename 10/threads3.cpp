@@ -16,7 +16,7 @@ void add(int x) {
 
 int main() {
     vector<thread> ths;
-    for (int i = 0; i <= THREAD_COUNT; i++) {
+    for (int i = 0; i < THREAD_COUNT; i++) {
         ths.push_back(thread(&add, INCREMENT));
     }
 
