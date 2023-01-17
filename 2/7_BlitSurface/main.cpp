@@ -31,6 +31,7 @@ int main(int argc, char* argv[]){
                             480, 
                             SDL_WINDOW_SHOWN);
 
+// @ File ./7_BlitSurface/main.cpp
     // Get the window surface
     SDL_Surface* windowSurface = SDL_GetWindowSurface(window);
     // Load a test image
