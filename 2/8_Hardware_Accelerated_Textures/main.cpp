@@ -34,8 +34,6 @@ int main(int argc, char* argv[]){
     // After we create our window, we now can create our renderer
     SDL_Renderer* renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
     
-    // Get the window surface
-    SDL_Surface* windowSurface  = SDL_GetWindowSurface(window);
     // Load a test image
     SDL_Surface* myTestImage    = SDL_LoadBMP("./assets/images/test.bmp");
     // Create a texture

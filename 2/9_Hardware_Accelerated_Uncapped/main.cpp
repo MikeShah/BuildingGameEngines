@@ -80,9 +80,13 @@ int main(int argc, char* argv[]){
         if(rectangle.x < 0){
             moveRight=true;
         }
-        if(rectangle.x > windowHeight-rectangle.w){
+        if(rectangle.x > windowWidth-rectangle.w){
             moveRight=false;
         }
+
+        // Now artificially, we could try to slow things
+        // down -- but will this work on everyone's machine?
+        //SDL_Delay(20);
 
         // Handle rendering
         // (1) First clear the renderer
