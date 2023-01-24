@@ -24,7 +24,7 @@ struct GameApp{
 
     ////////// Member Variables /////////
     SDL_Window* mWindow;
-    bool mRunGame = true;
+    bool        mRunGame = true;
 };
 
 
