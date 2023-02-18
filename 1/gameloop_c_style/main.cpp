@@ -4,19 +4,18 @@
 // run with    : ./prog
 #include <iostream>
 
-void input(){
+void input(void){
 
 }
 
-void update(){
+void update(void){
 }
 
-void render(){
+void render(void){
 
 }
 
 int main(){
-
     // Function pointers
     // These are pointers that can store the address of
     // a function. This way we can 're-assign' our routines

@@ -1,6 +1,6 @@
 // Directions: 
 //
-// Compile with: clang++ -std=c++17 locality.cpp -o prog
+// Compile with: clang++ -std=c++17 locality.cpp -o locality
 // g++ will also work fine
 // Visual Studio 2017 should also work fine
 //
