@@ -18,3 +18,7 @@ GameState::GameState(std::string file){
 
         std::cout << mStory[0] << std::endl;
 }
+
+
+// TODO: You should probably move all the implementations
+//       from the .hpp into the .cpp file!
