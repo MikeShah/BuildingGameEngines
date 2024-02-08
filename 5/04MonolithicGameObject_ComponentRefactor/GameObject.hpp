@@ -62,7 +62,7 @@ struct GameObject{
 
     template<typename T>
     T GetComponentAtIndex(size_t index){
-         return mComponents[index]; 
+         return static_cast<T>(mComponents[index]; 
     }
 
     public:
