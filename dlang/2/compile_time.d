@@ -8,7 +8,7 @@ import std.algorithm;
 void main(){
 
 	enum values = [7,12,15,17,14];
-	values.sort;
+	enum result = values.sort;
 	
-	pragma(msg,values);
+	pragma(msg,result);
 }
