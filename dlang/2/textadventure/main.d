@@ -17,6 +17,9 @@ void prompt(){
 /// Handle user input
 void input(ref GameState gs){
     int value;
+		// Note: This is somewhat brittle in that we account for the endline character
+		//       You can consider 'readln' then convert 'string' input to int using
+		//       to!string and using 'import std.conv;'
     readf!"%d\n"(value);
     gs.SetChoice(value);
 }
@@ -46,7 +49,6 @@ void main(string[] args){
         writeln("usage: ./prog story.txt\n");
         return;
     }
-    
     // Create one instance of our gamestate object on the
     // stack based on the program arguments
     GameState gs = GameState(args[1]);
@@ -62,5 +64,4 @@ void main(string[] args){
         // Draw updates to our screen
         render(gs);
     }
-
 }
