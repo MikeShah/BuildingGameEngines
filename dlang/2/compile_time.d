@@ -4,8 +4,8 @@
 //       when that line is parsed.
 //       Again -- the program is not running, only the compiler, evaluating
 //       the function call if all values are known at compile-time.
-import std.algorithm;
 void main(){
+    import std.algorithm;
 
 	enum values = [7,12,15,17,14];
 	enum result = values.sort;
