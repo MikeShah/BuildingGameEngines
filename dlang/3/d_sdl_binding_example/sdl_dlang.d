@@ -1,5 +1,16 @@
 // @file d_sdl_binding_example/sdl_dlang.d
 // Compiling and running: dmd sdl_dlang.d -L`pkg-config --libs sdl2` -of=prog
+//
+// The purpose of this example is to show how to 'bind' to a C library in a 
+// relatively 'manual' way. There are tools to automate this process, but
+// otherwise it shows what information the linker needs to know about in
+// order to process various commands.
+//
+// Some resources:
+// https://dlang.org/spec/interfaceToC.html
+// https://wiki.dlang.org/D_binding_for_C#Introduction
+// https://p0nce.github.io/d-idioms/#Linking-with-C-gotchas
+// https://p0nce.github.io/d-idioms/#Porting-from-C-gotchas
 import std.stdio;
 
 // Struct prototype 
