@@ -19,7 +19,6 @@ void render(){
 // Entry point into program
 void main(string[] args){
 
-
 	try{
 		GameApplication app = GameApplication(args);
 		app.SetFunctionPointer!"InputFunc"(&input);

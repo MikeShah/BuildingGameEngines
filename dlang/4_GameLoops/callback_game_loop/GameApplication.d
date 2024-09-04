@@ -1,3 +1,4 @@
+// @file ./callback_game_loop/GameApplication.d
 // This is a better example of a 'game struct'
 // 1. It's testable (We can create multiple instances)
 // 2. State can be encapsulated
