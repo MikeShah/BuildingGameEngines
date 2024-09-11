@@ -1,4 +1,4 @@
-// @file: not_functional.d
+// @file: functional_advantage.d
 // Run with: rdmd functional_advantage.d
 import std.stdio;
 import std.random;
@@ -16,7 +16,7 @@ struct Enemy{
 	int strength;
 	int magic;
 	int health;
-	// Note: For classes, you should 'override' the comparison
+	// Note: For classes, you should 'override' the comparison operator (opEquals)
 	int opCmp(ref const Enemy rhs){
 		if((strength+magic) < (rhs.strength + rhs.magic)){
 			return 1;
@@ -26,7 +26,6 @@ struct Enemy{
 			return 0;
 		}
  	}
-
 }
 
 Enemy CreateRandomEnemyFactory(){
@@ -48,7 +47,7 @@ void main(){
 		Enemies ~= CreateRandomEnemyFactory();
 	}
 
-	// TASK: Gather the strongest half of the enemies to go to battle
+	// TASK: Target the top 5 enemies
 
 	import std.algorithm;
 	// First sort the enemies
