@@ -1,0 +1,8 @@
+{
+	"fileVersion": 1,
+	"versions": {
+		"bindbc-loader": "1.0.3",
+		"bindbc-sdl": "1.3.5",
+		"gtk-d": "3.10.0"
+	}
+}

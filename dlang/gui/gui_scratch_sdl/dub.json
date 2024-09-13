@@ -1,0 +1,12 @@
+{
+	"authors": [
+		"mike"
+	],
+	"copyright": "Copyright © 2023, mike",
+	"dependencies": {
+		"bindbc-sdl": "~>1.3.5"
+	},
+	"description": "A minimal D application.",
+	"license": "proprietary",
+	"name": "gui_scratch_sdl"
+}

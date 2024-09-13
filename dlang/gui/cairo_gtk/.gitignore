@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/cairo_gtk
+cairo_gtk.so
+cairo_gtk.dylib
+cairo_gtk.dll
+cairo_gtk.a
+cairo_gtk.lib
+cairo_gtk-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst

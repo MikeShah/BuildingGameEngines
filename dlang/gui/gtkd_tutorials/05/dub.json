@@ -1,0 +1,12 @@
+{
+	"authors": [
+		"mike"
+	],
+	"copyright": "Copyright © 2023, mike",
+	"dependencies": {
+		"gtk-d": "~>3.10.0"
+	},
+	"description": "A minimal D application.",
+	"license": "proprietary",
+	"name": "05"
+}
