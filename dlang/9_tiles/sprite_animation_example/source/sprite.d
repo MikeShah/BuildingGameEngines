@@ -50,13 +50,12 @@ struct Sprite{
 				mRectangle.w = 100;
 				mRectangle.h = 100;
 
+				mFrame++;
 				// For this example, we want to 'cycle' through
 				// these frames.
 				if(mFrame > 3){
 						mFrame =0;
 				}
-
-				frame++;
 		}
 
 		void Render(SDL_Renderer* renderer){
