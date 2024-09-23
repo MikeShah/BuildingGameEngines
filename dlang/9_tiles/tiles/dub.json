@@ -8,5 +8,5 @@
 	},
 	"description": "A minimal D application.",
 	"license": "proprietary",
-	"name": "graphics_project"
+	"name": "prog_sdl"
 }
