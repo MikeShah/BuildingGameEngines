@@ -49,6 +49,8 @@ GameObject GameObjectFactory(T...)(string name){
 	}
 	return go;
 }
+// Example of an alias to make our GameObjectFactory a bit more clean.
+alias MakeCollisionTexture = GameObjectFactory!(ComponentType.COLLISION,ComponentType.TEXTURE);
 
 struct GameApplication{
 
@@ -58,13 +60,11 @@ struct GameApplication{
 			if(i%2==0){
 				mGameObjects ~= CreateTextureColliderGameObject("GameObject"~i.to!string);
 			}else if(i==4){
-				mGameObjects ~= GameObjectFactory!(ComponentType.COLLISION,ComponentType.TEXTURE)("GameObject"~i.to!string);
+				mGameObjects ~= MakeCollisionTexture("GameObject"~i.to!string);
 			}
 			else{
 				mGameObjects ~= CreateTextureGameObject("GameObject"~i.to!string);
 			}
-		
-
 		}
 	}
 
