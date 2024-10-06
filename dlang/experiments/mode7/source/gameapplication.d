@@ -79,12 +79,11 @@ struct Mode7{
 								double px = x / z * scale;
 								double py = camZ + y / z * scale;
 
-
 								px = cast(int)(px+camX) % cast(int)(mSurface.w);
 								py = cast(int)(py+camY) % cast(int)(mSurface.h);
 
 								Pixel p = mPixels[(j)*mSurface.w + i];
-								DrawPoint(r,cast(int)(px),cast(int)(py),4,p.r,p.g,p.b,p.a);
+								DrawPoint(r,cast(int)(px),cast(int)(py),2,p.r,p.g,p.b,p.a);
 //								DrawPoint(r,i,j,1,p.r,p.g,p.b,p.a);
 						}
 				}
