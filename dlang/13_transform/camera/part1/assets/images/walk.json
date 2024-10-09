@@ -1,0 +1,16 @@
+{
+"filepath":"./images/assets/walk.bmp",
+  "format":{
+    	"width"		: 1104,
+    	"height"	: 1104,
+    	"tileWidth"	: 138,
+    	"tileHeight": 138
+  },
+  "frames":{
+    	"walkDown": [32,33,34,35,36,37,38,39],
+    	"walkLeft": [56,57,58,59,60,61,62,63],
+    	"walkRight": [0,1,2,3,4,5,6,7],
+    	"walkUp": [8,9,10,11,12,13,14,15],
+  }
+}
+
