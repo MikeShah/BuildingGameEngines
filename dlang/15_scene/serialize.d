@@ -16,12 +16,6 @@ struct GameObject{
 
 }
 
-// Takes in a string input and returns a game object
-GameObject Deserialize(string input){
-		GameObject result;
-
-		return result;
-}
 
 // This is a trick to create a 'tuple' at compile-time.
 template Tuple(T...){
@@ -62,6 +56,14 @@ string Serialize(T)(T type){
 }
 
 
+// Takes in a string input and returns a type 
+T Deserialize(T)(string input){
+		T result;
+
+		return result;
+}
+
+
 void main(){
 		// String wysiwyg string
 		string example=
@@ -83,7 +85,8 @@ void main(){
 		g.mName = "mike";
 		g.mID = 42;
 
-		writeln("Seralialized String: ",Serialize(g));
+        writeln("Game Object in-memory  :\n\t", g);
+		writeln("Seralialized String    :\n\t",Serialize(g));
 
 }
 
