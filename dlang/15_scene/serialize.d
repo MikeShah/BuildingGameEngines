@@ -1,3 +1,4 @@
+// @file: serialize.d
 import std.stdio;
 import std.json;
 
@@ -8,20 +9,16 @@ struct Tree{
 struct TreeNode{
 		TreeNode[] mChildren;
 }
-
 // Sample Game Object
 struct GameObject{
 		size_t mID;
 		string mName;
-
 }
-
 
 // This is a trick to create a 'tuple' at compile-time.
 template Tuple(T...){
 		alias Tuple = T;
 }
-
 /// Returns the string with quotes around it.
 string Quote(string str){
 		return "\""~str~"\"";
@@ -35,9 +32,9 @@ string Serialize(T)(T type){
 
 		string result;
 		// https://dlang.org/spec/traits.html#allMembers
-		alias fields  = Tuple!(__traits(allMembers, T));
-
 		// Create a compile-time sequence with all of the members
+		alias fields  = Tuple!(__traits(allMembers, T));
+		// Debug at compile time the fields
 		/*
 			 pragma(msg,"==========");
 			 pragma(msg,fields);
@@ -45,7 +42,6 @@ string Serialize(T)(T type){
 			 pragma(msg,fields[1]);
 			 pragma(msg,"==========");
 		 */
-
 		foreach(m ; fields){
 				mixin("string value = type."~m~".to!string;");
 				// Format and write out the string
@@ -85,7 +81,7 @@ void main(){
 		g.mName = "mike";
 		g.mID = 42;
 
-        writeln("Game Object in-memory  :\n\t", g);
+		writeln("Game Object in-memory  :\n\t", g);
 		writeln("Seralialized String    :\n\t",Serialize(g));
 
 }

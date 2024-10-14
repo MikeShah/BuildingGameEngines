@@ -14,8 +14,6 @@ struct SomeType{
     Component c;
 }
 
-
-
 struct Type(T){
 
     this(int oneValue){}
@@ -27,7 +25,6 @@ struct Type(T){
     }
 }
 
-
 @UDA struct UDA{}
 
 @UDA struct ClientMessage{
@@ -38,8 +35,6 @@ struct Type(T){
     int id;
 }
 
-
-
 void main(){
 
     pragma(msg,"=== Finding UDAs ====");
@@ -48,7 +43,6 @@ void main(){
     pragma(msg,clientMessages);
     pragma(msg,server);
     pragma(msg,"=======");
-
 
     alias AllParams = __traits(allMembers, SomeType);
     pragma(msg,AllParams);
