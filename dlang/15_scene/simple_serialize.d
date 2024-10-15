@@ -18,6 +18,7 @@ void main(){
     // Read the data as binary
     auto myRead = File("simple_serialize.bin","r");
 
+//		auto cfd1 = myRead.rawRead(new int[6]);
     auto cfd1 = myRead.rawRead(new typeof(configdata1[0])[configdata1.length]); 
     auto cfd2 = myRead.rawRead(new typeof(configdata2[0])[configdata2.length]); 
 
