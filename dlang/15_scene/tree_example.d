@@ -21,6 +21,10 @@ struct TreeNode{
 		mChildren ~= t;
 	}
 
+	// Visualize the tree with indentation
+	// Another way might be to 'serialize' the tree
+	// and it would look something like:
+	// 99 [ 1 2 [ 4 5 6 7 ] 3 ]
 	void Visualize(){
 		import std.range;
 			string indent;
@@ -55,6 +59,7 @@ struct SceneTree{
 }
 
 void main(){
+
 	SceneTree s;
 	TreeNode* n = new TreeNode(99);
   s.SetRoot(n);	
@@ -70,6 +75,7 @@ void main(){
 	middleChild.AddChild(5);
 	middleChild.AddChild(6);
 	middleChild.AddChild(7);
+
 
 
 	s.Traverse();
