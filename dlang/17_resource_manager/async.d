@@ -2,7 +2,6 @@
 import std.stdio;
 import std.parallelism;
 import core.thread;
-
 int asyncRead(string filename){
     writefln("Starting async read: %s", filename);
 
@@ -30,7 +29,6 @@ void main(){
     }   
     writeln();
     // --------------------------------------
-
     // (3) Task awaited for
     immutable taskResult = myTask.yieldForce();
     writeln();
