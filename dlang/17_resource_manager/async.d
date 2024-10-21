@@ -1,0 +1,33 @@
+// @file async.d
+import std.stdio;
+import std.parallelism;
+import core.thread;
+
+int asyncRead(string filename){
+    writefln("Starting async read: %s", filename);
+
+    Thread.sleep(2.seconds);
+    writefln("Completed %s read", filename);
+
+    return 0;
+}
+
+void main(){
+
+    auto myTask= task!asyncRead("data.txt");
+    myTask.executeInNewThread();
+
+    // Do some other task while 'myTask'
+    // completes its work asynchronously.
+    writeln("In main thread: ");
+    for(int i=0; i < 10; i++){
+        Thread.sleep(50.msecs);
+        write(i," ");
+        stdout.flush();
+    }   
+    writeln();
+
+    immutable taskResult = myTask.yieldForce();
+    writeln();
+    writeln("Finished main");
+}
