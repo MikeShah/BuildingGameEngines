@@ -9,7 +9,7 @@ int asyncRead(string filename){
     Thread.sleep(2.seconds);
     writefln("Completed %s read", filename);
 
-    return 0;
+    return 147;
 }
 
 void main(){
@@ -34,5 +34,6 @@ void main(){
     // (3) Task awaited for
     immutable taskResult = myTask.yieldForce();
     writeln();
+    writeln("Finished Task: ", taskResult);
     writeln("Finished main");
 }
