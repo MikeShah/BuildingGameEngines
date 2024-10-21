@@ -14,11 +14,14 @@ int asyncRead(string filename){
 
 void main(){
 
+    // (1) Task creation
     auto myTask= task!asyncRead("data.txt");
+    // (2) Task started
     myTask.executeInNewThread();
 
+    // ---------------------------------------
     // Do some other task while 'myTask'
-    // completes its work asynchronously.
+    // completes its work concurrently.
     writeln("In main thread: ");
     for(int i=0; i < 10; i++){
         Thread.sleep(50.msecs);
@@ -26,7 +29,9 @@ void main(){
         stdout.flush();
     }   
     writeln();
+    // --------------------------------------
 
+    // (3) Task awaited for
     immutable taskResult = myTask.yieldForce();
     writeln();
     writeln("Finished main");
