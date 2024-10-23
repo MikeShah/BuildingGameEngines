@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/00_setup_pyd
+00_setup_pyd.so
+00_setup_pyd.dylib
+00_setup_pyd.dll
+00_setup_pyd.a
+00_setup_pyd.lib
+00_setup_pyd-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst

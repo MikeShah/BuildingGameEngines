@@ -16,7 +16,6 @@ struct FileWatcher{
 			assert(0, "Attempting to watch a file that does not exist.");
 		}
 	}
-
 	// Pass in a callback for what to do when
 	// a file changes.
 	void SetCallbackOnChange(void function(string) callback){
@@ -42,7 +41,6 @@ struct FileWatcher{
 				}
 		}
 	}
-
 	string mFilepath;
 	SysTime mStartTime;
 	void function(string) mCallback;
@@ -53,11 +51,9 @@ void log(string arg){
 	writeln(arg);
 }
 
-
 void main(){
 	FileWatcher f = FileWatcher("./data.txt");
 	f.SetCallbackOnChange(&log);
-
 	// At some point, try to change or save
 	// the file 'data.txt'
 	while(true){

@@ -1,0 +1,16 @@
+{
+	"authors": [
+		"Mike"
+	],
+	"copyright": "Copyright © 2024, Mike",
+	"dependencies": {
+		"bindbc-sdl": "~>1.5.0",
+		"pyd": "~>0.14.4"
+	},
+	"description": "A minimal D application.",
+	"license": "proprietary",
+	"name": "00_setup_pyd",
+	"subConfigurations":{
+		"pyd": "python310"
+	}
+}
