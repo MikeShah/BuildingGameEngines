@@ -5,7 +5,6 @@ import bindbc.sdl;
 import std.string;
 
 struct Sound{
-
     // Constructor
     this(string filepath){
         if(SDL_LoadWAV(filepath.toStringz,&m_audioSpec, &m_waveStart, &m_waveLength) == null){
