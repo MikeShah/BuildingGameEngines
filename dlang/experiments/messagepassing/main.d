@@ -1,4 +1,10 @@
+// This example is using D's built-in message passing.
+// While message passing is not necessary, it can make things quite easy.
+//
 // Useful thread on spawn: https://forum.dlang.org/post/rwijjieabuuirzdqbcnp@forum.dlang.org
+// Useful article on event systems: https://www.gamedev.net/articles/programming/general-and-gameplay-programming/effective-event-handling-in-c-r2459/
+// https://medium.com/@savas/nomad-game-engine-part-7-the-event-system-45a809ccb68f
+
 import std.stdio;
 import std.concurrency;
 import std.datetime;
