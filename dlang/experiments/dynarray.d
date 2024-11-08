@@ -21,9 +21,9 @@ void writeline(T...)(T args){
 }
 
 struct DynArray(T){
-    T* data;
-    size_t mSize;
-    size_t mCapacity;
+    T* data;            // pointer(ptr) to data
+    size_t mSize;       // 'size' or 'length'
+    size_t mCapacity;   // Internal allocation size
 
     invariant(){
         assert(mSize <= mCapacity,"DynArray.size < capacity");
@@ -33,9 +33,9 @@ struct DynArray(T){
     @disable this();
 
     this(size_t initialCapacity){
-        mSize = 0;
-        mCapacity = initialCapacity;
-        data = cast(T*)malloc(T.sizeof*mCapacity);
+        mSize       = 0;
+        mCapacity   = initialCapacity;
+        data        = cast(T*)malloc(T.sizeof*mCapacity);
     }
     ~this(){
         if(null != data){
@@ -85,7 +85,24 @@ struct DynArray(T){
     }
     
 
+    DynArray!T opIndexAssign(){
+        return this; 
+    }
 
+    //
+    typeof(this)* opSlice(size_t start, size_t end){
+        assert(end-start>0,"negative size slice not allowed");
+        typeof(this)* slice = cast(typeof(this)*)malloc((void*).sizeof);
+        slice.data = data+start;
+        slice.mSize= end-start;
+        slice.mCapacity = end-start;
+        return slice;
+    }
+    
+    T opIndex()(size_t idx){ return data[idx];}
+
+
+    //TODO: Implement the append operator
     void push_back(T)(T elem){
         if(mSize==mCapacity){
             // allocate double the space
@@ -108,6 +125,10 @@ struct DynArray(T){
         return data[pos];
     }
 
+	size_t length() const{
+		return mSize;
+	}
+
     // ============ Iterator ========
     int next=0;
     T front(){
@@ -121,7 +142,6 @@ struct DynArray(T){
     }
     // ==============================
 }
-
 
 unittest{
     DynArray!int test = DynArray!int(5);
@@ -159,5 +179,42 @@ unittest{
 
     test3=test3;
     assert(test3.at(4) == test3.at(4));
+}
+// Test out slicing
+unittest{
+    import core.stdc.stdio;
+    import std.stdio;
+    DynArray!int test = DynArray!int(5);
+    printf("Initial test: %p\n", test.data);
 
+    printf("=======Setting up=======\n");
+    test.push_back(50);
+    test.push_back(60);
+    test.push_back(70);
+    test.push_back(80);
+    test.push_back(90);
+    printf("=======Setting done =======\n");
+    printf("=======Printing out test =======\n");
+    printf("%d\n",test[0]);
+    printf("%d\n",test[1]);
+    printf("%d\n",test[2]);
+    printf("%d\n",test[3]);
+    printf("%d\n",test[4]);
+    printf("=======Done printing test =======\n\n");
+    
+    printf("=======Grabbing Slice=======\n");
+    auto slice = test[2..4];
+    printf("=======Done Grabbing Slice======\n\n");
+
+    //writeln("slice type is: ",typeid(slice));
+
+    for(int i=0; i < slice.length; i++){
+        printf("value is: %d\n",slice.at(i));
+    }
+}
+
+extern(C) void main()
+{
+    static foreach(u; __traits(getUnitTests, __traits(parent, main)))
+        u();
 }
