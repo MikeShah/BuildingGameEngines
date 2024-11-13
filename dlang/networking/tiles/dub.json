@@ -1,0 +1,12 @@
+{
+	"authors": [
+		"mike"
+	],
+	"copyright": "Copyright © 2023, mike",
+	"dependencies": {
+		"bindbc-sdl": "~>1.2.4"
+	},
+	"description": "A minimal D application.",
+	"license": "proprietary",
+	"name": "graphics_project"
+}

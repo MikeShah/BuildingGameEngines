@@ -1,0 +1,9 @@
+Run:
+rdmd server.d
+rdmd client.d
+
+
+TODO
+
+- Can add some more polish on input, but you get the idea.
+- I do not handle removing clients properly. You can handle this by giving clients unique index. Server should then test if socket is valid and then can skip that client index when iterating through collection to send/receive messages.
