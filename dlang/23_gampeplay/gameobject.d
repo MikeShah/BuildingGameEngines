@@ -3,7 +3,6 @@
 interface IComponent{}
 class Scripts : IComponent {}
 
-
 struct GameObject{
 	uint mID;
 	bool isStaticGameObject = true;
@@ -11,6 +10,5 @@ struct GameObject{
 	IComponent[] components;
 	Scripts[]    scripts;
 }
-
 
 void main(){}
