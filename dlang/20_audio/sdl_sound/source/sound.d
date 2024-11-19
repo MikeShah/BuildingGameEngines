@@ -3,10 +3,15 @@ import bindbc.sdl;
 import std.stdio;
 import std.string;
 
+/// Note: In your resource manager you may consider
+///       storing a 'id' or otherwise using the 'filepath'
+///       as the key
 struct Sound{
     // Constructor
+
     this(string filepath){
-        if(SDL_LoadWAV(filepath.toStringz,&m_audioSpec, &m_waveStart, &m_waveLength) == null){
+  		mFilepath = filepath;   
+	   if(SDL_LoadWAV(filepath.toStringz,&m_audioSpec, &m_waveStart, &m_waveLength) == null){
             writeln("sound loading error: ",SDL_GetError());
         }else{
             writeln("Sound file loaded:",filepath);
@@ -49,6 +54,7 @@ struct Sound{
     SDL_AudioDeviceID m_device;
 
     // Properties of the Wave File that is loaded
+		string 				mFilepath;
     SDL_AudioSpec m_audioSpec;
     ubyte*        m_waveStart;
     uint          m_waveLength;
