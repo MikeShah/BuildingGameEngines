@@ -2,27 +2,13 @@
 // https://dlang.org/library/core/simd.html
 // Good index of intrinsics: https://www.felixcloutier.com/x86/
 import std.stdio;
-import core.cpuid;
 import core.simd;   // For SIMD instructions
 import std.parallelism;
 import std.array;
 
-struct CPUInfo{
-//    bool AES = aes();
-}
-
-// At compile-time generate a function that prints
-// out a struct and its fields.
-void PrintStruct(T)(){
-    
-}
-
 
 void main(){
     
-    PrintStruct!CPUInfo();
-
-
     // Normal add
     float[4] a = [1.0f,1.0f,1.0f,1.0f];
     float[4] b = [1.0f,2.0f,3.0f,4.0f];
@@ -93,6 +79,16 @@ void main(){
     writeln("v_a2: ",v_a2);                                          // Sometimes we get duplicate results which is fine!
     writeln("v_b2: ",v_b2);
     writeln("v_r4: ",v_result4);
+
+
+		// Writing a function is probably a good idea
+		// Note: I named this 'Dotf' because the types really matter.
+		float Dotf_simd(float4 a, float4 b){
+				float4 result = cast(float4) __simd(XMM.DPPS,a,b,0xFF); 
+				return cast(float)(result[0]);
+		}
+		writeln;
+		writeln("Dotf_simd: ", Dotf_simd([1.0f,1.0f,1.0f,1.0f],[1.0f,2.0f,3.0f,4.0f]));
 
     // Things to keep in mind
     // 1. With SIMD you do need to test on every architecture you are running on.
