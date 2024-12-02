@@ -4,7 +4,7 @@ import core.simd;   // For SIMD instructions
 import std.parallelism;
 
 void main(){
-    // SSE add
+    // Add using threads 
     float[4] a = [1.0f,1.0f,1.0f,1.0f];
     float[4] b = [1.0f,2.0f,3.0f,4.0f];
     float[4] result1 = 0.0f;; // Set all floats to 0.0f;
