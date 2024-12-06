@@ -1,4 +1,5 @@
 /// Builds the documentation for all of the sample code
+/// rdmd -wi -g build_docs.d
 import std.stdio;
 import std.file;
 import std.algorithm;
@@ -14,6 +15,7 @@ auto GetDirectories(){
 }
 
 
+/// Functions main job is to invoke a D compiler to run ddoc
 void GenerateHTML(in DirEntry[] dfiles){
 
     foreach(dfile ; dfiles){
@@ -32,9 +34,12 @@ void GenerateHTML(in DirEntry[] dfiles){
             // NOTE: I pass in "-c" to avoid building all the executables,
             //       but there must be a way to avoid compiling
             auto pid = execute(["dmd","-Dddocumentation/"~directory,"-unittest","-main","-c",dfile]);
-        }else if(dfile.indexOf("source") >=0){
-            // Must be a 'dub' project if filepath contains 'source'
-            // NOTE: I can do something smarter in the future here, maybe looking for dub.json file?
+        }else if(dfile.indexOf("dub.json") >=0){
+            // Builds directory using dub if a dub.json file is detected
+            // TODO: Can probably just copy the 'docs' directory to the documentation folder at this point.
+
+//            auto pid = execute(["dub","build/","docs");
+
         }
     }
 }
@@ -53,6 +58,8 @@ void GatherHTMLLinks(string documentationDirectory){
         directories[f[0 .. f.lastIndexOf("/")]] ~= f[f.lastIndexOf("/")+1 .. $];
     }
 
+    
+
     /// Every page gets the table of contents
     string tableOfContents = MakeTableOfContents(documentationDirectory);
 
@@ -68,7 +75,8 @@ void GatherHTMLLinks(string documentationDirectory){
         // and appending in our table of links
         foreach( value ; v){
             // Open the file
-            auto f = File(k~"/"~value,"rw");
+            string filename = k~"/"~value;
+            auto f = File(filename,"rw");
             
             // Store the contents of the file 
             char[][] lines;
@@ -82,15 +90,30 @@ void GatherHTMLLinks(string documentationDirectory){
                 if(line.indexOf("<body id=\"ddoc_main\"") > -1){
                     lines~= tableOfContents.dup;
                 }
+                if(line.indexOf("<h1 class=\"module_name\">") > -1){
+                    string dFileName = filename.replace("html","d");
+                    lines ~= "<a href=../../"~dFileName~">"~dFileName~"</a>".dup;
+                    auto source = File(dFileName[dFileName.indexOf("/")+1..$],"r");
+
+                    lines ~= "<section class=\"section\">".dup;
+                    lines ~= "<div class=\"dlang\">".dup;
+                    lines ~= "<code class=\"code\">".dup;
+                    foreach( s ; source.byLine){
+                        lines ~= s ~"<br>";
+                    }
+                    lines ~= "</code>".dup;
+                    lines ~= "</div>".dup;
+                    lines ~= "</section>".dup;
+                }
             }
             // Close the file
             f.close();
 
-            auto f = File(k~"/"~value,"w");
+            auto f2 = File(filename,"w");
             foreach(line; lines){
-                f.write(line);
+                f2.write(line);
             }   
-            f.close();
+            f2.close();
 
 
             writeln("\t",value);
@@ -142,15 +165,13 @@ void main(){
     // (1) collect all of the D files
    auto dfiles = GetDirectories();
 
-   foreach(idx,f; dfiles){
-        writeln(idx,":",f);
-   }
+//   foreach(idx,f; dfiles){
+//        writeln(idx,":",f);
+//   }
 
    // (2) Generate the html files
    GenerateHTML(dfiles);
 
    // (3) Gather the HTML Links
    GatherHTMLLinks(DocsDirectory);
-
-
 }
