@@ -18,6 +18,7 @@ auto GetDirectories(){
 /// Functions main job is to invoke a D compiler to run ddoc
 void GenerateHTML(in DirEntry[] dfiles){
 
+    // Find every D file and attempt to build the ddocs
     foreach(dfile ; dfiles){
         // ignore this file
         if(dfile == "build_docs.d"){
@@ -25,7 +26,7 @@ void GenerateHTML(in DirEntry[] dfiles){
         }
 
         // If it's a regular .d file, then just build it.
-        writeln("Checking: ",dfile);
+        writeln("Searching for D File: ",dfile);
         string directory = dfile[0 .. dfile.lastIndexOf("/")];
         writeln("\tIn directory:",directory);
 
@@ -34,12 +35,13 @@ void GenerateHTML(in DirEntry[] dfiles){
             // NOTE: I pass in "-c" to avoid building all the executables,
             //       but there must be a way to avoid compiling
             auto pid = execute(["dmd","-Dddocumentation/"~directory,"-unittest","-main","-c",dfile]);
-        }else if(dfile.indexOf("dub.json") >=0){
+        }
+        else if(dfile.indexOf("dub.json") >=0){
+            writeln("Found a dub-based project: ",directory);
+            auto pid = execute(["dub","--build=docs","-Dddocumentation/"~directory,dfile]);
             // Builds directory using dub if a dub.json file is detected
             // TODO: Can probably just copy the 'docs' directory to the documentation folder at this point.
-
-//            auto pid = execute(["dub","build/","docs");
-
+        //    auto pid = execute(["dub","build/","docs");
         }
     }
 }
@@ -67,7 +69,8 @@ void GatherHTMLLinks(string documentationDirectory){
     // 'table of contents' of the links found
     foreach(k,v; directories){
         writeln("Root directory:", k);
-        // Create the table
+        // Create table of all other .d files that are found within
+        // same directory as the current file.
         string table = MakeRelatedHTMLTable(v).idup;
 
         // For each of the files found in the current directory
@@ -79,42 +82,60 @@ void GatherHTMLLinks(string documentationDirectory){
             auto f = File(filename,"rw");
             
             // Store the contents of the file 
-            char[][] lines;
+            string[] lines;
+            int counter=0;
             foreach(line; f.byLine){
-                lines ~= line.dup; // Note: If we do not .dup these lines, then
+                lines ~= line.idup~'\n'; // Note: If we do not .dup these lines, then
                                    //       we will lose the reference to the memory
                                    //       when otherwise iterating through 'lines'.
-                if(line.indexOf("<div class=\"content_wrapper\"") > -1){
-                    lines~= table.dup;
-                }
-                if(line.indexOf("<body id=\"ddoc_main\"") > -1){
-                    lines~= tableOfContents.dup;
-                }
-                if(line.indexOf("<h1 class=\"module_name\">") > -1){
-                    string dFileName = filename.replace("html","d");
-                    lines ~= "<a href=../../"~dFileName~">"~dFileName~"</a>".dup;
-                    auto source = File(dFileName[dFileName.indexOf("/")+1..$],"r");
-
-                    lines ~= "<section class=\"section\">".dup;
-                    lines ~= "<div class=\"dlang\">".dup;
-                    lines ~= "<code class=\"code\">".dup;
-                    foreach( s ; source.byLine){
-                        lines ~= s ~"<br>";
-                    }
-                    lines ~= "</code>".dup;
-                    lines ~= "</div>".dup;
-                    lines ~= "</section>".dup;
-                }
             }
             // Close the file
             f.close();
+
+            // the lines
+            for(size_t i=0; i < lines.length; i++){
+                // Append some additional headers
+                if(lines[i].indexOf("<head>") > -1){
+                    lines[i] = "<head><link rel=\"stylesheet\" href=\"https://www.w3schools.com/w3css/4/w3.css\">".dup;
+                }
+                // First time we find the content wrapper, we want to add in our 'header index'
+                if(lines[i].indexOf("<div class=\"content_wrapper\">") > -1){
+                    lines[i]="<div class=\"w3-threequarter w3-container\"><div class=\"content_wrapper\">".dup; // Note: Need to terminate this
+                    lines[i]~= table.dup;                                            //       div before end of body.
+                }
+                if(lines[i].indexOf("</body>") > -1){
+                    lines[i] = "</div> <!--  ending w3-threequarter--></body>".dup;
+                }
+
+
+                if(lines[i].indexOf("<body id=\"ddoc_main\" class=\"ddoc dlang\">") > -1){
+                    lines[i]= "<body id=\"ddoc_main\" class=\"ddoc dlang\">" ~tableOfContents.idup;
+                }
+                if(lines[i].indexOf("<h1 class=\"module_name\">") > -1){
+                    string dFileName = filename.replace("html","d");
+                    string sourceCode = lines[i];
+                    sourceCode ~= "<a href=../../"~dFileName~">"~dFileName~"</a>".idup;
+                    sourceCode ~= "<section class=\"section\">".dup;
+                    sourceCode ~= "<div class=\"dlang\">".dup;
+                    sourceCode ~= "<code class=\"code\">".dup;
+
+                    auto sourceFile = File(dFileName[dFileName.indexOf("/")+1..$],"r");
+                    foreach( s ; sourceFile.byLine){
+                        sourceCode ~= s.idup ~"<br>".idup;
+                    }
+                    sourceCode ~= "</code>".dup;
+                    sourceCode ~= "</div>".dup;
+                    sourceCode ~= "</section>".dup;
+
+                    lines[i] = sourceCode;
+                }
+            }
 
             auto f2 = File(filename,"w");
             foreach(line; lines){
                 f2.write(line);
             }   
             f2.close();
-
 
             writeln("\t",value);
         }
@@ -124,19 +145,25 @@ void GatherHTMLLinks(string documentationDirectory){
 
 
 /// Make the table of contents to help navigate all of the directories quickly
+/// This appears on the 'top-left' of the screen
 string MakeTableOfContents(string documentationDirectory){
-    string result="<div style=\"float: left\">";
+
+    string result="<div class=\"w3-quarter w3-container\">".dup;
+    result ~= "<div class=\"w3-bar-block w3-light-grey\">".dup;
     auto dFiles = dirEntries(documentationDirectory, SpanMode.shallow).array.sort;
 
     foreach(f; dFiles){
         if(f.isDir){
             // Just grab the first file found and link to that one for now
             auto firstLink = dirEntries(f,SpanMode.shallow).filter!(f=> f.name.endsWith(".html")).array.sort;
-            result ~= "<li><a href=\"./../../"~firstLink[0]~"\">"~f~"</a></li>";
+            if(firstLink.length >0){
+                result ~= "<a href=\"./../../"~firstLink[0]~"\" class=\"w3-bar-item w3-button\">"~f~"</a>".dup;
+            }
         }
     }
 
-    result ~= "</div>";
+    result ~= "</div><!-- Ending w3-bar-block -->".dup;
+    result ~= "</div><!-- w3-quarter ending -->".dup;
 
      return result;
 }
