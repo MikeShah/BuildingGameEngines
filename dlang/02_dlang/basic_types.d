@@ -11,8 +11,8 @@ void main(){
                          // initialized
     writeln();
 
-    // Other default types and their 
-    // 'sizeof' property
+    /// Other default types and their 
+    /// 'sizeof' property
     writeln(bool.sizeof);
     writeln(byte.sizeof);
     writeln(ubyte.sizeof);

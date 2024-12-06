@@ -1,4 +1,4 @@
-// @file auto.d
+/// @file auto.d
 import std.stdio;
 
 auto sum(int a, int b){
@@ -9,7 +9,7 @@ void main(){
 
     auto i = 5;
     writeln(5);
-    // Retrieve the derived type wit 'typeid'
+    /// Retrieve the derived type wit 'typeid'
     writeln(typeid(i));
 
     writeln(sum(4,5));

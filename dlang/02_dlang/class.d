@@ -1,9 +1,9 @@
-// @file class.d
+/// @file class.d
 import std.stdio;
 
 class Student{
-	// constructor 
-	// In D we name the constructor 'this'
+	/// constructor 
+	/// In D we name the constructor 'this'
 	this(string name, int id){
 		mName = name;
 		mID   = id;
