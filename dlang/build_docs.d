@@ -53,15 +53,84 @@ void GatherHTMLLinks(string documentationDirectory){
         directories[f[0 .. f.lastIndexOf("/")]] ~= f[f.lastIndexOf("/")+1 .. $];
     }
 
+    /// Every page gets the table of contents
+    string tableOfContents = MakeTableOfContents(documentationDirectory);
+
     // For each of the keys, we want to build a sort of
     // 'table of contents' of the links found
     foreach(k,v; directories){
         writeln("Root directory:", k);
+        // Create the table
+        string table = MakeRelatedHTMLTable(v).idup;
+
+        // For each of the files found in the current directory
+        // we will then add the table found by modifying the file
+        // and appending in our table of links
         foreach( value ; v){
+            // Open the file
+            auto f = File(k~"/"~value,"rw");
+            
+            // Store the contents of the file 
+            char[][] lines;
+            foreach(line; f.byLine){
+                lines ~= line.dup; // Note: If we do not .dup these lines, then
+                                   //       we will lose the reference to the memory
+                                   //       when otherwise iterating through 'lines'.
+                if(line.indexOf("<div class=\"content_wrapper\"") > -1){
+                    lines~= table.dup;
+                }
+                if(line.indexOf("<body id=\"ddoc_main\"") > -1){
+                    lines~= tableOfContents.dup;
+                }
+            }
+            // Close the file
+            f.close();
+
+            auto f = File(k~"/"~value,"w");
+            foreach(line; lines){
+                f.write(line);
+            }   
+            f.close();
+
+
             writeln("\t",value);
         }
     }
+    // Read the file
+}
 
+
+/// Make the table of contents to help navigate all of the directories quickly
+string MakeTableOfContents(string documentationDirectory){
+    string result="<div style=\"float: left\">";
+    auto dFiles = dirEntries(documentationDirectory, SpanMode.shallow).array.sort;
+
+    foreach(f; dFiles){
+        if(f.isDir){
+            // Just grab the first file found and link to that one for now
+            auto firstLink = dirEntries(f,SpanMode.shallow).filter!(f=> f.name.endsWith(".html")).array.sort;
+            result ~= "<li><a href=\"./../../"~firstLink[0]~"\">"~f~"</a></li>";
+        }
+    }
+
+    result ~= "</div>";
+
+     return result;
+}
+
+
+/// Given a list of strings creates an html table as a single string.
+/// These are the code samples from within the same module
+string MakeRelatedHTMLTable(string[] links){
+    string result;
+
+    result ~= "<div><ul>";
+    foreach(link; links){
+        result ~= "<li><a href=\""~link~"\">"~link[0 .. link.indexOf(".")]~"</a></li>";
+    }
+    result ~= "</ul></div>";
+
+    return result;
 }
 
 /// Entry point to program
@@ -78,7 +147,7 @@ void main(){
    }
 
    // (2) Generate the html files
-   //GenerateHTML(dfiles);
+   GenerateHTML(dfiles);
 
    // (3) Gather the HTML Links
    GatherHTMLLinks(DocsDirectory);
