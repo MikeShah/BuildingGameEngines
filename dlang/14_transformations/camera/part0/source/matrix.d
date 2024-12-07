@@ -5,27 +5,30 @@ import vec3;
 import geometry;
 
 // Matrix3x3 
-struct Mat3{
+struct Mat3
+{
 		// Note: enum's here are not needed, but it helps document memory layout
 		// of rows, and then columns in the multidimensional array.
 		enum ROW = 3;
 		enum COL = 3;
 		// Initialize always with identity matrix unless otherwise specified
 		float[ROW][COL] e = [[1.0f, 0.0f, 0.0f],
-										  	[ 0.0f, 1.0f, 0.0f],
-												[0.0f, 0.0f, 1.0f]];
+										  	 [0.0f, 1.0f, 0.0f],
+												 [0.0f, 0.0f, 1.0f]];
 
 		// Sets every value to a specific value
 		// This is handy to 'zero' a matrix for instance
-		this(float value){
+		this(float value)
+		{
 				e = value;
 		}
 
 		// Construct each element
 		// e10 - means row 1, column 0
 		this(float e00, float e01, float e02,
-						float e10, float e11, float e12,
-						float e20, float e21, float e22){
+			   float e10, float e11, float e12,
+				 float e20, float e21, float e22)
+		{
 				e[0][0] = e00;		e[0][1] = e01;		e[0][2] = e02;
 				e[1][0] = e10;		e[1][1] = e11;		e[1][2] = e12;
 				e[2][0] = e20;		e[2][1] = e21;		e[2][2] = e22;
@@ -36,6 +39,7 @@ struct Mat3{
 				e[row][col] = value;
 		}
 
+		
 		float opIndex(size_t row, size_t col){
 				// TODO: See if called
 				import std.stdio;
@@ -44,7 +48,8 @@ struct Mat3{
 		}
 
 		// Index to get the column
-		float[3] opIndex(size_t col){
+		float[3] opIndex(size_t col)
+		{
 				if(col==0){
 						return [e[0][0],e[1][0],e[2][0]];
 				}else	if(col==1){
@@ -55,7 +60,8 @@ struct Mat3{
 		}
 
 		// Matrix Multiplication
-		Mat3 opBinary(string op)(Mat3 rhs){
+		Mat3 opBinary(string op)(Mat3 rhs)
+		{
 				Mat3 result = Mat3(0.0f);
 				static if(op=="*"){
 						for(int r= 0; r < 3; r++){
@@ -72,7 +78,8 @@ struct Mat3{
 
 		// Handy function to print each row
 		// of a matrix one after the other
-		void Print(){
+		void Print()
+		{
 				import std.stdio;
 				writeln("row 0:",e[0]);
 				writeln("row 1:",e[1]);
@@ -82,7 +89,8 @@ struct Mat3{
 }
 
 /// Helper function to generate a Translation matrix
-Mat3 MakeTranslate(float xt, float yt){
+Mat3 MakeTranslate(float xt, float yt)
+{
 		Mat3 result = Mat3(	1.0f,0.0f,xt,
 					  						0.0f,1.0f,yt,
 												0.0f,0.0f,1.0f);
@@ -90,7 +98,8 @@ Mat3 MakeTranslate(float xt, float yt){
 }
 
 /// Helper function to generate a scale matrix
-Mat3 MakeScale(float sx, float sy){
+Mat3 MakeScale(float sx, float sy)
+{
 		Mat3 result = Mat3(	sx  ,0.0f,0.0f,
 												0.0f,  sy,0.0f,
 												0.0f,0.0f,1.0f);
@@ -99,7 +108,8 @@ Mat3 MakeScale(float sx, float sy){
 
 /// Makes  rotation.
 /// Need to provide in radians
-Mat3 MakeRotate(float angle_in_radians){
+Mat3 MakeRotate(float angle_in_radians)
+{
 		import std.math;
 
 		// Nice optimization to only compute sin/cos one time
@@ -114,7 +124,8 @@ Mat3 MakeRotate(float angle_in_radians){
 
 // Retrieve the position of the x and y
 // translation values.
-Vec2f FromMat3GetTranslation(Mat3 m){
+Vec2f FromMat3GetTranslation(Mat3 m)
+{
 		Vec2f result = Vec2f(0,0);
 		result.x = m.e[0][2];
 		result.y = m.e[1][2];
@@ -123,14 +134,16 @@ Vec2f FromMat3GetTranslation(Mat3 m){
 
 // How to extract angle from rotation matrix
 // https://zpl.fi/converting-rotation-matrices-to-angles/
-float FromMat3GetRotation(Mat3 m){
+float FromMat3GetRotation(Mat3 m)
+{
 		// Pick an axis, and see how much it's offset
 		Vec2f col0 = Vec2f(m.e[0][0],m.e[0][1]);
 		return atan2(col0.y, col0.x);				
 }
 
 // The 'scale' of x and y axis is the 'length' of each axis
-Vec2f FromMat3GetScale(Mat3 m){
+Vec2f FromMat3GetScale(Mat3 m)
+{
 		Vec2f xAxis = Vec2f(0,0);
 		xAxis.x = m.e[0][0];
 		xAxis.y = m.e[1][0];
@@ -150,19 +163,22 @@ Vec2f FromMat3GetScale(Mat3 m){
 /// on a transform object.
 /// Returns a transform, so that we can compose transformations
 /// easily using Universal Function Call Syntax (UFCS)
-Mat3 Translate(Mat3 m, float x, float y){
+Mat3 Translate(Mat3 m, float x, float y)
+{
 		m = m * MakeTranslate(x,y);
 		return m;
 }
 
 // Perform a rotation
-Mat3 Rotate(Mat3 m, float angle){
+Mat3 Rotate(Mat3 m, float angle)
+{
 		m = m * MakeRotate(angle);
 		return m;
 }
 
 // Perform a scale
-Mat3 Scale(Mat3 m, float sx, float sy){
+Mat3 Scale(Mat3 m, float sx, float sy)
+{
 		m = m * MakeScale(sx,sy);
 		return m;
 }
@@ -261,5 +277,4 @@ unittest {
 		Mat3 result = Mat3(0.0f);
 		result =  mat1 * mat2;
 		result.Print();
-
 }
