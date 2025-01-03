@@ -1,7 +1,7 @@
 // Tiny experiment with worker threads and eventually abstarting everything
 // to a 'job' that executes with 'fibers' in the context of each thread.
 
-// TODO: Wrap around queue or abstrat it to RingBuffer data structure
+// TODO: Wrap around queue or abstract it to RingBuffer data structure
 // TODO:
 //       Lock OS threads to CPUs to avoid context switches and 
 //       false sharing issues in L1/L2 cache.

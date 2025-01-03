@@ -20,6 +20,8 @@ mixin template Polymorphic(T){
 struct vTable(T){
 }
 
+// betterC allows you to still make interfaces, so we
+// can use this type as our interface
 interface Animals(T){
     void speak();
 }
