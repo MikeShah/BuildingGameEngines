@@ -17,7 +17,9 @@ void main(){
 	auto result = range.map!(a=>a+1);
 	writeln(result);
 
-	iota(1,4,1).map!"a=>a+1".writeln;
+	// For 'map' with a string mixin (i.e. string argument), no need to
+	// pass a lambda, just use the "a+1" as the thing to apply to each element.
+	iota(1,4,1).map!"a+1".writeln;
 
 }
 
