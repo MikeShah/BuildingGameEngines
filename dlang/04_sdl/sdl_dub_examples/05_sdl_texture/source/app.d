@@ -31,6 +31,8 @@ void main()
 		while(gameIsRunning){
 				// Store an SDL Event
 				SDL_Event event;
+				// Handle input from our polled event.
+				// Event is stored in the structure."q
 				while(SDL_PollEvent(&event)){
 						if(event.type == SDL_QUIT){
 								writeln("Exit event triggered");
