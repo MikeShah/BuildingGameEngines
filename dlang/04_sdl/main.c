@@ -25,9 +25,9 @@ int main(int argc, char* argv[]){
     // Request a window to be created for our platform
     // The parameters are for the title, x and y position,
     // and the width and height of the window.
-    window = SDL_CreateWindow("C++ SDL2 Window",
+    window = SDL_CreateWindow("C SDL2 Window",
             0,
-            2500,
+            0,
             640,
             480,
             SDL_WINDOW_SHOWN);
