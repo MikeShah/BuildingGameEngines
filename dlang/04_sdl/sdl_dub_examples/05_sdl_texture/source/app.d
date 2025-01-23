@@ -5,6 +5,7 @@ import bindbc.sdl;
 
 void main()
 {
+		// Create na SDL Window
 		SDL_Window* window = SDL_CreateWindow("Dlang SDL Window",
 						0,0, 640,480, SDL_WINDOW_SHOWN);
 
@@ -18,12 +19,14 @@ void main()
 		// effectively updated memory to GPU texture.
 		SDL_FreeSurface(myTestImage);
 
+		// Rectangle is where we will represent the shape.
 		SDL_Rect rectangle;
 		rectangle.x = 50;
 		rectangle.y = 50;
 		rectangle.w = 100;
 		rectangle.h = 100;
 
+		// Infinite loop for our application
 		bool gameIsRunning=true;
 		while(gameIsRunning){
 				// Store an SDL Event
