@@ -21,7 +21,7 @@ void writeline(T...)(T args){
 }
 
 struct DynArray(T){
-    T* data;            // pointer(ptr) to data
+    T* mData;            // pointer(ptr) to data
     size_t mSize;       // 'size' or 'length'
     size_t mCapacity;   // Internal allocation size
 
@@ -35,12 +35,12 @@ struct DynArray(T){
     this(size_t initialCapacity){
         mSize       = 0;
         mCapacity   = initialCapacity;
-        data        = cast(T*)malloc(T.sizeof*mCapacity);
+        mData        = cast(T*)malloc(T.sizeof*mCapacity);
     }
     ~this(){
-        if(null != data){
-            free(data);
-            data = null;
+        if(null != mData){
+            free(mData);
+            mData = null;
         }
         mSize = size_t.init;
         mCapacity = size_t.init;
@@ -56,9 +56,9 @@ struct DynArray(T){
         }
         T* newdata = cast(T*)malloc(T.sizeof*rhs.mCapacity);
         for(size_t i=0; i < rhs.mCapacity; i++){
-            newdata[i] = rhs.data[i];
+            newdata[i] = rhs.mData[i];
         }
-        data = newdata;
+        mData = newdata;
         mSize = rhs.mSize;
         mCapacity = rhs.mCapacity;
     }
@@ -71,20 +71,21 @@ struct DynArray(T){
             return;
         }
         // Free any previous memory
-        if(data!=null){
-            free(data);
+        if(mData!=null){
+            free(mData);
         }
 
         T* newdata = cast(T*)malloc(T.sizeof*rhs.mCapacity);
         for(size_t i=0; i < rhs.mCapacity; i++){
-            newdata[i] = rhs.data[i];
+            newdata[i] = rhs.mData[i];
         }
-        data = newdata;
+        mData = newdata;
         mSize = rhs.mSize;
         mCapacity = rhs.mCapacity;
     }
     
 
+    // TODO
     DynArray!T opIndexAssign(){
         return this; 
     }
@@ -93,13 +94,14 @@ struct DynArray(T){
     typeof(this)* opSlice(size_t start, size_t end){
         assert(end-start>0,"negative size slice not allowed");
         typeof(this)* slice = cast(typeof(this)*)malloc((void*).sizeof);
-        slice.data = data+start;
+        slice.mData = mData+start;
         slice.mSize= end-start;
         slice.mCapacity = end-start;
         return slice;
     }
     
-    T opIndex()(size_t idx){ return data[idx];}
+    /// Return the value at an index
+    T opIndex()(size_t idx){ return mData[idx];}
 
 
     //TODO: Implement the append operator
@@ -109,30 +111,36 @@ struct DynArray(T){
             T* newdata = cast(T*)malloc(T.sizeof*mCapacity*2);
             // copy over previous data
             for(int i=0; i < mCapacity; i++){ 
-                newdata[i] = data[i];
+                newdata[i] = mData[i];
             }
             // Free data after the coy
-            free(data);
+            free(mData);
             // Update capacity
             mCapacity = mCapacity*2;
-            data = newdata;
+            mData = newdata;
         }
-        data[mSize] = elem;
+        mData[mSize] = elem;
         mSize++;
     }
 
     ref T at(size_t pos){
-        return data[pos];
+        return mData[pos];
     }
 
 	size_t length() const{
 		return mSize;
 	}
 
+    /// Returns a pointer to the raw data.
+    /// The pointer cannot be changed otherwise
+    const(T*) data() const{
+        return this.mData;
+    }
+
     // ============ Iterator ========
     int next=0;
     T front(){
-        return data[next];
+        return mData[next];
     }
     void popFront(){
         next++;
@@ -185,7 +193,7 @@ unittest{
     import core.stdc.stdio;
     import std.stdio;
     DynArray!int test = DynArray!int(5);
-    printf("Initial test: %p\n", test.data);
+    printf("Initial test: %p\n", test.mData);
 
     printf("=======Setting up=======\n");
     test.push_back(50);
