@@ -33,9 +33,9 @@ class ComponentTexture : IComponent{
 		SDL_RenderDrawRect(r,&mRect);
 	}
 
+	SDL_Rect mRect;	
 	private:
 	size_t mOwner;
-	SDL_Rect mRect;	
 }
 
 class ComponentCollision : IComponent{
@@ -55,7 +55,7 @@ class ComponentCollision : IComponent{
 		SDL_RenderDrawRect(r,&mRect);
 	}
 
+	SDL_Rect mRect;	
 	private:
 	size_t mOwner;
-	SDL_Rect mRect;	
 }

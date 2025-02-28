@@ -48,4 +48,5 @@ GameObject GameObjectFactory(T...)(string name){
 	return go;
 }
 // Example of an alias to make our GameObjectFactory a bit more clean.
-alias MakeCollisionTexture = GameObjectFactory!(ComponentType.COLLISION,ComponentType.TEXTURE);
+alias MakeSprite      = GameObjectFactory!(ComponentType.COLLISION,ComponentType.TEXTURE);
+alias MakeBoundingBox =  GameObjectFactory!(ComponentType.COLLISION);

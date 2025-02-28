@@ -23,12 +23,21 @@ struct SceneTree{
 						if(i%2==0){
 								mGameObjects ~= CreateTextureColliderGameObject("GameObject"~i.to!string);
 						}else if(i==4){
-								mGameObjects ~= MakeCollisionTexture("GameObject"~i.to!string);
+								mGameObjects ~= MakeSprite("GameObject"~i.to!string);
 						}
 						else{
 								mGameObjects ~= CreateTextureGameObject("GameObject"~i.to!string);
 						}
 				}
+
+
+                // Make a bounding box
+                GameObject world =  MakeBoundingBox("world"); 
+                auto col = cast(ComponentCollision)world.GetComponent(ComponentType.COLLISION);
+                col.mRect.w = 100;
+                col.mRect.h = 400;
+
+                mGameObjects ~= world;
 		}
 
 		void Input(){
