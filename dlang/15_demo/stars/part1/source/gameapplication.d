@@ -103,8 +103,13 @@ struct GameApplication{
 			// Retrieve the matrix in the transform component to perform transformations
 			auto t = comp.GetMat3();
 
+			// Update Mouse coordinates to world position
+			Vec2f camPos = Camera.GetCameraPosition();
+			int mouseWorldX = mMouseX + cast(int)camPos.x;
+			int mouseWorldY = mMouseY + cast(int)camPos.y;
+
 			// Compute the world coordinate from the mouse position
-			Vec2f world = ScreenToWorld(mMouseX,mMouseY,640,480);
+			Vec2f world = ScreenToWorld(mouseWorldX,mouseWorldY,640,480);
 
 			// Scale and translate
 			t=t.Translate(world.x,world.y).Scale(50.0f,50.0f);
