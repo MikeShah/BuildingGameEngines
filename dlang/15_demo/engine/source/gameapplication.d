@@ -81,7 +81,6 @@ struct SceneTree{
         collider.mRect.h = 600;
 
         mGameObjects ~= world;
-
 		}
 
 		// TODO: Consider moving this elsewhere
@@ -131,8 +130,7 @@ struct SceneTree{
         }
     }
 
-    void Render(){
-        
+    void Render(){        
         // Render Collision Components
         foreach(ref objComponent; mGameObjects){
             auto col = cast(ComponentCollision)objComponent.GetComponent(ComponentType.COLLISION);
@@ -154,7 +152,6 @@ struct SceneTree{
                 
                 auto transform = cast(ComponentTransform)objComponent.GetComponent(ComponentType.TRANSFORM);
 								Vec2f pos = transform.mWorldMatrix.Frommat3GetTranslation() ;
-                //Vec2f pos = transform.GetPosition() ;
                 writeln(tex.mRect);
                 tex.mRect.x = cast(int)pos.x;
                 tex.mRect.y = cast(int)pos.y;
@@ -185,6 +182,7 @@ struct Scene{
     Camera 			 mCamera;
     GameState		 mGameState;
     SDL_Renderer* mRendererRef;
+		IScript[]		mSceneScripts; 
 
     // Create scene with a new camera.
     this(SDL_Renderer* r, string jsonDataFile, Camera cam){
@@ -196,6 +194,10 @@ struct Scene{
         mSceneTree.Input(mCamera);
     }
     void Update() {
+				foreach(ref s; mSceneScripts){
+					s.Update();
+				}
+
         mSceneTree.Update(mCamera);
     }
     void Render() {

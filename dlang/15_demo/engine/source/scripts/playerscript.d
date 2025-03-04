@@ -17,7 +17,7 @@ class PlayerScript : IScript{
 				mOwner = owner;
 		}
 
-		// TODO: Set boundaries
+		// TODO: Decide if player should respect world boundaries 
 		override void Update(){
 				writeln("Running PlayerScript");
 				// Retrieve the game object
@@ -66,7 +66,6 @@ class PlayerScript : IScript{
 
 				// Perform acceleration
 				transform.Translate(mAcceleration.x,mAcceleration.y);
-
 		}
 
 
