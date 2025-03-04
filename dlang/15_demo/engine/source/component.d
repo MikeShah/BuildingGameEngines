@@ -75,7 +75,6 @@ class ComponentTransform : IComponent{
 	override void Render(SDL_Renderer* r){
 	}
 
-
     // Translate
     // Also updates internal rectangle
     void Translate(float x,float y){
@@ -91,19 +90,17 @@ class ComponentTransform : IComponent{
         mLocalMatrix = mLocalMatrix * mLocalMatrix.Rotate(angle);
     }
 
-
     Vec2f GetPosition(){
-        return mWorldMatrix.Frommat3GetTranslation();
+        return mLocalMatrix.Frommat3GetTranslation();
     }
 
     Vec2f GetScale(){
-        return mWorldMatrix.Frommat3GetScale();
+        return mLocalMatrix.Frommat3GetScale();
     }
 
     float GetAngle(){
-        return mWorldMatrix.Frommat3GetRotation();
+        return mLocalMatrix.Frommat3GetRotation();
     }
-
 
     mat3 mLocalMatrix;
     mat3 mWorldMatrix;

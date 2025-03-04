@@ -6,7 +6,7 @@ import gameobject;
 import component;
 import factory;
 import linear;
-import script;
+import scripts;
 
 /// Camera has a transformation
 class Camera{
@@ -18,7 +18,7 @@ class Camera{
     void PositionCamera(float x, float y){
         mTransform.mLocalMatrix = MakeTranslate(x,y);
     }
-    Vec2f GetPostion(float x, float y){
+    Vec2f GetPosition(){
         Vec2f result = mTransform.mLocalMatrix.Frommat3GetTranslation();
         return result;
     }
@@ -31,18 +31,33 @@ struct SceneTree{
     this(SDL_Renderer* r, int objects){
         mRendererRef = r;
 
-        for(size_t i=0; i < objects; i++){
+				LoadWorld(5);
+    }
+
+		// TODO: This is really just a helper function
+		//       It probably belongs in 'Scene' to othrwise
+		//       access and 'add to the scene tree' as a function of input.
+		GameObject MakeAsteroidBox(string name,int x, int y){
+				GameObject obj = MakeSprite(name);
+				auto transform= cast(ComponentTransform)obj.GetComponent(ComponentType.TRANSFORM);
+				auto tex = cast(ComponentTexture)obj.GetComponent(ComponentType.TEXTURE);
+				auto col  = cast(ComponentCollision)obj.GetComponent(ComponentType.COLLISION);
+				tex.mRect.w = 50;
+				tex.mRect.h = 50;
+				col.mRect.w = 50;
+				col.mRect.h = 50;
+				transform.Translate(x,y);
+				obj.mScripts ~= new AsteroidScript(obj.GetID());
+
+				return obj;
+		}
+
+		// TODO: No filename or format to parse
+		void LoadWorld(int objects){
             // Create some different game objects from a factory
-            GameObject obj = MakeSprite("GameObject"~i.to!string);
-            auto transform= cast(ComponentTransform)obj.GetComponent(ComponentType.TRANSFORM);
-            auto tex = cast(ComponentTexture)obj.GetComponent(ComponentType.TEXTURE);
-            auto col  = cast(ComponentCollision)obj.GetComponent(ComponentType.COLLISION);
-            tex.mRect.w = 50;
-            tex.mRect.h = 50;
-            col.mRect.w = 50;
-            col.mRect.h = 50;
-            transform.Translate(60*i,10);
-            mGameObjects ~= obj;
+				// Perhaps representing asteroids
+        for(size_t i=0; i < objects; i++){
+            mGameObjects ~= MakeAsteroidBox("GameObject"~i.to!string,60*cast(int)i,10);
         }
 
         // Make the main character
@@ -62,15 +77,29 @@ struct SceneTree{
         auto collider= cast(ComponentCollision)world.GetComponent(ComponentType.COLLISION);
         collider.mRect.x = 0;
         collider.mRect.y = 0;
-        collider.mRect.w = 1000;
-        collider.mRect.h = 1000;
+        collider.mRect.w = 800;
+        collider.mRect.h = 600;
 
         mGameObjects ~= world;
-    }
 
-    void Input(){
-        
-    }
+		}
+
+		// TODO: Consider moving this elsewhere
+		void Input(Camera cam){
+				// Get SDL Mouse coordinates
+				int mouseX, mouseY;
+				int mask = SDL_GetMouseState(&mouseX,&mouseY);
+				Vec2f cameraPosition=cam.GetPosition();
+
+				if(mask == SDL_BUTTON_LEFT){
+						int newX = mouseX - cast(int)cameraPosition.x;
+						int newY = mouseY - cast(int)cameraPosition.y;
+						mGameObjects ~= MakeAsteroidBox("asteroid"~mGameObjects.length.to!string,newX,newY); 
+						// Cheap delay after a mouse click
+						// Better to handle the state, but this is fine for now.
+						SDL_Delay(200);
+				}
+		}
 
     // TODO
     // Note that this is not quite correct, meaning that we should update all of
@@ -91,12 +120,10 @@ struct SceneTree{
             }
         }
 
-        // Update components individually
         // Update Transform components
         foreach(ref objComponent; mGameObjects){
             auto transform = cast(ComponentTransform)objComponent.GetComponent(ComponentType.TRANSFORM);
             transform.mWorldMatrix = transform.mLocalMatrix * cam.mTransform.mLocalMatrix; 
-
 
             if(transform !is null){
                 transform.Update();
@@ -105,8 +132,6 @@ struct SceneTree{
     }
 
     void Render(){
-
-        // Update the Texture to be in sync with the transform
         
         // Render Collision Components
         foreach(ref objComponent; mGameObjects){
@@ -115,7 +140,7 @@ struct SceneTree{
                 writeln(objComponent.GetName()," - collision render");
                 col.Render(mRendererRef);
                 auto transform = cast(ComponentTransform)objComponent.GetComponent(ComponentType.TRANSFORM);
-                Vec2f pos = transform.GetPosition() ;
+                Vec2f pos = transform.mWorldMatrix.Frommat3GetTranslation() ;
                 col.mRect.x = cast(int)pos.x;
                 col.mRect.y = cast(int)pos.y;
             }
@@ -128,7 +153,8 @@ struct SceneTree{
                 tex.Render(mRendererRef);
                 
                 auto transform = cast(ComponentTransform)objComponent.GetComponent(ComponentType.TRANSFORM);
-                Vec2f pos = transform.GetPosition() ;
+								Vec2f pos = transform.mWorldMatrix.Frommat3GetTranslation() ;
+                //Vec2f pos = transform.GetPosition() ;
                 writeln(tex.mRect);
                 tex.mRect.x = cast(int)pos.x;
                 tex.mRect.y = cast(int)pos.y;
@@ -167,7 +193,7 @@ struct Scene{
         mSceneTree = SceneTree(mRendererRef,5);
     }
     void Input() {
-        mSceneTree.Input();
+        mSceneTree.Input(mCamera);
     }
     void Update() {
         mSceneTree.Update(mCamera);

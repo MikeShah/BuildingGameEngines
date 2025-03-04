@@ -1,0 +1,4 @@
+
+interface IScript{
+	void Update();
+}
