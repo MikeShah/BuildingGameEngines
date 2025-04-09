@@ -8,6 +8,10 @@ extern(C):
 import core.stdc.stdio;
 import core.stdc.stdlib;
 
+
+
+
+
 /// betterC compatible function for debugging a DynArray
 void writeline(T...)(T args){
     auto args2 = DynArray!(string)(args.length);
@@ -29,40 +33,49 @@ struct DynArray(T){
     T* mData;            // pointer(ptr) to data
     size_t mSize;       // 'size' or 'length'
     size_t mCapacity;   // Internal allocation size
+		bool 	 mOwns;				// Internally determine if we 'own' the memory.
+												// If DynArray is a 'slice', then it is not the
+												// owner and should not free memory.
 
     invariant(){
         assert(mSize <= mCapacity,"DynArray.size < capacity");
     }
     // Disallow default constructor so that we have to specify
     // an initial size.
-    @disable this();
+//    @disable this();
 
 		/// Constructor with an initial capacity 
     this()(size_t initialCapacity){
         mSize       = 0;
         mCapacity   = initialCapacity;
-        mData        = cast(T*)malloc(T.sizeof*mCapacity);
+        mData       = cast(T*)malloc(T.sizeof*mCapacity);
+				mOwns 			= true;
     }
 
 		/// Constructor with that we can initialize with any number of elements
 		/// Note: We need at least '1' argument, such that I want to get rid of
 		///       any default constructor.
 	import core.stdc.stdarg;
-    this(V...)(V values)
+    this(V...)(ref V values)
 			if(V.length >0)
 		{
         mSize       = 0;
         mCapacity   = values.length;
         mData        = cast(T*)malloc(T.sizeof*mCapacity);
+				mOwns 			= true;
     }
 
 		/// Destructor
 		/// Frees allocated memory automatically
     ~this(){
+				if(!mOwns){
+					return;
+				}
 				printf("Destructor called\n");
-        
-				if(mData != null){
-						printf("SHOULD NOT PRINT");
+				        
+
+				if(mData !is null){
+						printf("SHOULD NOT PRINT\n");
             free(mData);
             mData = null;
         }
@@ -70,13 +83,10 @@ struct DynArray(T){
         mCapacity = size_t.init;
     }
 
-		bool empty(){return true;}
-		T pop() {T a; return a;}
-
     // Copy constructor
     // Note: Without this, we get in trouble for things, like
     //       even the iterator will accidently free our memory!
-    this(DynArray!T rhs){
+    this(ref return scope inout typeof(this) rhs){
         printf("Copy constructor invoked\n"); 
         // Avoid copy  
         if(this == rhs){
@@ -86,37 +96,48 @@ struct DynArray(T){
         for(size_t i=0; i < rhs.mCapacity; i++){
             newdata[i] = rhs.mData[i];
         }
-        mData = newdata;
-        mSize = rhs.mSize;
+        mData 		= newdata;
+        mSize 		= rhs.mSize;
         mCapacity = rhs.mCapacity;
+				mOwns 		= true;	
     }
     // TODO: Handle OpAssign
-    void opAssign(T)(ref typeof(this) rhs)
+    void opAssign(T)(const ref typeof(this) rhs)
     {
         printf("opAssign invoked\n"); 
         // Avoid copy  
         if(&this == &rhs){
+						
             return;
         }
         // Free any previous memory
-        if(mData != null){
-						pritnf("SHOULD NOT PRINT");
+        if(mData !is null){
+						printf("SHOULD NOT PRINT\n");
             free(mData);
+						mData = null;
         }
 
         T* newdata = cast(T*)malloc(T.sizeof*rhs.mCapacity);
         for(size_t i=0; i < rhs.mCapacity; i++){
             newdata[i] = rhs.mData[i];
         }
-        mData = newdata;
-        mSize = rhs.mSize;
+        mData 		= newdata;
+        mSize 		= rhs.mSize;
         mCapacity = rhs.mCapacity;
+				mOwns 		= true;
     }
   
 		/// Overload for appending another DynArray to the current one
 		DynArray!T opBinary(string op)(DynArray!T rhs){
 			static if(op=="~"){
-				// Case (1)
+				// Case(1)
+				// If we don't own the memory, then we need to make a copy
+				// of the slice.
+				if(!mOwns){
+
+				}
+	
+				// Case (2)
 				// Check if there is capacity to copy elements over without allocation.
 				if(rhs.length < (mCapacity - mSize)){
 					for(size_t i=0; i < rhs.length; i++){
@@ -128,7 +149,7 @@ struct DynArray(T){
 					return this;
 				}
 				//
-				// Case (2)
+				// Case (3)
 				size_t newSize = rhs.mSize + this.mSize;
         T* temp = cast(T*)malloc(T.sizeof*newSize);
 				// Reassign memory one element at a time.
@@ -140,9 +161,11 @@ struct DynArray(T){
 				}
 				// Update capacities and lengths, and reassign data
 				free(mData);
-				mData = temp;
-				mSize = newSize;
+				mData 		= null;
+				mData 		= temp;
+				mSize 		= newSize;
 				mCapacity = newSize;
+				mOwns 		= true;
 				return this;		
 			}
 		}
@@ -177,12 +200,13 @@ struct DynArray(T){
     }
 
     /// Slicing merely returns the same memory as a slice
-    typeof(this)* opSlice(size_t start, size_t end){
+    typeof(this) opSlice(size_t start, size_t end){
         assert(end-start>0,"negative size slice not allowed");
-        typeof(this)* slice = cast(typeof(this)*)malloc((void*).sizeof);
-        slice.mData = mData+start;
-        slice.mSize= end-start;
+        typeof(this) slice;
+        slice.mData 		= mData+start;
+        slice.mSize			= end-start;
         slice.mCapacity = end-start;
+				slice.mOwns 		= false;
         return slice;
     }
     
@@ -211,12 +235,20 @@ struct DynArray(T){
     }
 
     ref T at(size_t pos){
+				assert(pos < mCapacity, "accessing memory outside of capacity");
         return mData[pos];
     }
 
-	size_t length() const{
-		return mSize;
-	}
+			size_t length() const{
+				return mSize;
+			}
+
+		/// Returns true or false depending on if this DynArray is the owner
+		/// of its memory. If the instance of DynArray is a 'slice', then it
+		/// is not an owner of the memory.
+		bool isOwner() const {
+			return mOwns;
+		}
 
     /// Returns a pointer to the raw data.
     /// The pointer cannot be changed otherwise
@@ -304,7 +336,6 @@ unittest{
     printf("=======Done Grabbing Slice======\n\n");
 
     //writeln("slice type is: ",typeid(slice));
-
     for(int i=0; i < slice.length; i++){
         printf("value is: %d\n",slice.at(i));
     }
@@ -348,12 +379,31 @@ unittest{
 		test1 = test1 ~ test2;
 		
     for(int i=0; i < test1.length; i++){
-        printf("value is: %d\n",test1.at(i));
+        printf("test1 : %d\n",test1.at(i));
     }
 
 		printf("=======done append test 2======\n");
 }
 
+unittest{
+	printf("=======slice ownership test======\n");
+	auto memory = DynArray!int(5);
+	memory.at(0) = 0;
+	memory.at(1) = 1;
+	memory.at(2) = 2;
+	memory.at(3) = 3;
+	memory.at(4) = 4;
+
+	auto slice = memory[2..3];
+
+	assert(memory.isOwner == true, "memory is the owner");
+	assert(slice.isOwner == false, "slice is not the owner");
+
+	slice = slice ~ memory;
+
+
+	printf("=======done slice ownership test======\n");
+}
 unittest{
 /*		printf("=======constructor test======\n");
     auto test1 = DynArray!(int)(2,3,4,5,6);
