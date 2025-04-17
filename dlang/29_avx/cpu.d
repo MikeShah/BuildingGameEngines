@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // @file: cpu.d
 // https://dlang.org/phobos/core_cpuid.html
 // https://dlang.org/library/core/simd.html
@@ -6,26 +5,7 @@
 import std.stdio;
 import core.cpuid;
 import core.simd;   // For SIMD instructions
-
-struct CPUInfo{
-//    bool AES = aes();
-}
-
-// TODO:
-// At compile-time generate a function that prints
-// out a struct and its fields.
-void PrintStruct(T)(){
-    writeln("Has SSE: ",sse());    
-}
-
-void main(){
-    PrintStruct!CPUInfo();
-}
-=======
-// @file cpu.d
-import core.cpuid;
 import std.meta;
-import std.stdio;
 
 // Handy function to print out a struct and its fields only
 void PrintStruct(T)(){
@@ -55,5 +35,3 @@ void main(){
 	writeln("family: ",family);
 	writeln("cacheLevels: ",cacheLevels());
 }
-
->>>>>>> 6fcf9fb0c1622a72361dd9b27288f25bd1f34cff
