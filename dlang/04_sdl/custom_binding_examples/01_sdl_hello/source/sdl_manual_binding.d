@@ -1474,16 +1474,19 @@ extern(C){
 		void SDL_DestroyRenderer(SDL_Renderer * renderer);
 		int SDL_RenderClear(SDL_Renderer * renderer);
 		int SDL_SetRenderDrawColor(SDL_Renderer * renderer, ubyte r, ubyte g, ubyte b, ubyte a);
-		int SDL_RenderDrawLine(SDL_Renderer * renderer, int x1, int y1, int x2, int y2);
+		bool SDL_RenderLine(SDL_Renderer *renderer, float x1, float y1, float x2, float y2);
+
 		void SDL_RenderPresent(SDL_Renderer * renderer);
-		int SDL_RenderDrawRect(SDL_Renderer * renderer, const SDL_Rect * rect);
 		int SDL_RenderTexture(SDL_Renderer * renderer, SDL_Texture * texture, const SDL_FRect * srcrect, const SDL_FRect * dstrect);
+		bool SDL_RenderRect(SDL_Renderer *renderer, const SDL_FRect *rect);
+
 
 		SDL_Texture * SDL_CreateTextureFromSurface(SDL_Renderer * renderer, SDL_Surface * surface);
 		void SDL_DestroyTexture(SDL_Texture * texture);
 
 		void SDL_DestroySurface(SDL_Surface * surface);
-		int SDL_SetColorKey(SDL_Surface * surface, int flag, uint key);
+		bool SDL_SetSurfaceColorKey(SDL_Surface *surface, bool enabled, uint key);
+
 		uint SDL_MapRGB(const SDL_PixelFormat * format, ubyte r, ubyte g, ubyte b);
 		int SDL_SetTextureBlendMode(SDL_Texture * texture, SDL_BlendMode blendMode);
 
