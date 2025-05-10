@@ -1,6 +1,9 @@
 // @file d_sdl_binding_example/sdl_dlang.d
 // Compiling and running:
-// dmd -betterC sdl_dlang.d sdl_manual_binding.d -L`pkg-config --libs sdl2` -of=prog && ./prog
+// dmd -betterC sdl_dlang.d sdl_manual_binding.d -L`pkg-config --libs sdl3` -of=prog && ./prog
+
+// Note: On linux may be as simple as:
+// dmd -betterC sdl_dlang.d sdl_manual_binding.d -L-lSDL3 -of=prog && ./prog
 //
 // Note: I am intentionally using 'betterC' here to make this example more portable
 //
@@ -25,20 +28,20 @@ extern (C) void main(){
 				printf("Could not initialize SDL Video\n");
 		}
 
-		window = SDL_CreateWindow("A Full SDL Program with D Binding", 0,0, 800,600,SDL_WINDOW_SHOWN);
+		window = SDL_CreateWindow("A Full SDL Program with D Binding",800,600,SDL_WINDOW_ALWAYS_ON_TOP);
 		if(null==window){ printf("Could not create window\n");  }
 
 		SDL_Renderer* renderer = null;
-		renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
+		renderer = SDL_CreateRenderer(window,null);
 
 		SDL_Surface* surface = SDL_LoadBMP("./assets/test.bmp");
-		SDL_SetColorKey(surface,true,SDL_MapRGB(surface.format,0xFF,0,0xFF));
+		SDL_SetSurfaceColorKey(surface, true, 0xFF);
 
 		SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer,surface);
-		SDL_FreeSurface(surface);
+		SDL_DestroySurface(surface);
 
 		// Create a rectangle
-		SDL_Rect rectangle;
+		SDL_FRect rectangle;
 		rectangle.x = 50;
 		rectangle.y = 100;
 		rectangle.w = 200;
@@ -54,11 +57,11 @@ extern (C) void main(){
 				// Start our event loop
 				while(SDL_PollEvent(&event)){
 						// Handle each specific event
-						if(event.type == SDL_QUIT){
+						if(event.type == SDL_EVENT_QUIT){
 								gameIsRunning= false;
 						}
 
-						if(event.type == SDL_MOUSEBUTTONDOWN){
+						if(event.type == SDL_EVENT_MOUSE_BUTTON_DOWN){
 								if(event.button.button == SDL_BUTTON_LEFT){
 										SDL_SetTextureBlendMode(texture,SDL_BLENDMODE_ADD);
 								}
@@ -72,9 +75,9 @@ extern (C) void main(){
 
 				// Do our drawing
 				SDL_SetRenderDrawColor(renderer,255,255,255,SDL_ALPHA_OPAQUE);
-				SDL_RenderDrawLine(renderer,5,5,100,120);
-				SDL_RenderDrawRect(renderer,&rectangle);
-				SDL_RenderCopy(renderer,texture,null,&rectangle);
+				SDL_RenderLine(renderer, 5,5,100,120);
+				SDL_RenderRect(renderer,&rectangle);
+				SDL_RenderTexture(renderer,texture,null,&rectangle);
 				// Finally show what we've drawn
 				SDL_RenderPresent(renderer);
 		}
