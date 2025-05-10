@@ -1,10 +1,10 @@
 // On linux compile with:
-// gcc main.c -o prog -lSDL2
+// gcc main.c -o prog -lSDL3
 
 // C Standard Libraries
 #include <stdio.h>
 // Third-party library
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 
 int main(int argc, char* argv[]){
 
@@ -23,14 +23,8 @@ int main(int argc, char* argv[]){
     }
 
     // Request a window to be created for our platform
-    // The parameters are for the title, x and y position,
-    // and the width and height of the window.
-    window = SDL_CreateWindow("C SDL2 Window",
-            0,
-            0,
-            640,
-            480,
-            SDL_WINDOW_SHOWN);
+    // The parameters are for the title and the width and height of the window.
+		window = SDL_CreateWindow("A C SDL3 Window",800,600,SDL_WINDOW_ALWAYS_ON_TOP);
 
     // We add a delay in order to see that our window
     // has successfully popped up.
