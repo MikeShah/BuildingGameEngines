@@ -3,9 +3,9 @@
 #
 # Tools like 'pkg-config' can also help
 # e.g.
-# pkg-config --libs sdl2
+# pkg-config --libs sdl3
 #
-# Usage: dmd source/*.d -L`pkg-config --libs sdl2` -of=prog
+# Usage: dmd -g source/*.d -L`pkg-config --libs sdl3` -of=prog
 #
 # Linux
-dmd source/*.d -L-lSDL2 -of=prog
+dmd -g source/*.d -L-lSDL3 -of=prog
