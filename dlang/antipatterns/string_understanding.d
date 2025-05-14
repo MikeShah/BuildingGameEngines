@@ -4,6 +4,8 @@
 // Below are some examples to otherwise help try to see where you can use strings.
 // Otherwise, understand that 'cast' can be a dangerous thing, if you try to write into an immutable
 // type, as this program will 'segfault'. 
+//
+// For more see: https://dlang.org/spec/arrays.html#strings
 
 import std.stdio;
 import std.string;
@@ -31,6 +33,13 @@ void main(){
 	char[] raw_string = new char[4];
 	raw_string = cast(char[])"mike";
 	assert(raw_string[2] == 'k');
+
+	// These are the short ways to make a 'mutable' and 'immutable' strings
+	// that you probably may want to do if you want to 'initialize' the 
+	// char[] or immutable(char)[] otherwise;
+	char[] mike = "mike".dup;
+	auto 	 immutable_mike = "mike".idup; // Same as: string immutable_mike = "mike";
+	writeln(typeid(immutable_mike));
 
 	// Dangerous, "mike" is of type string, so we shouldn't be changing.
 	// read-only data.
