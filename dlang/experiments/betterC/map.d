@@ -1,3 +1,5 @@
+// Note: This should be 'betterC' compatible, but you will need to remove
+// 			 writeln, and malloc any memory.
 import std.stdio;
 import std.range;
 import std.traits;
