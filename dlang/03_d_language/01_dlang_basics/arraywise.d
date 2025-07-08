@@ -5,6 +5,10 @@ void main(){
 
   import std.stdio, std.algorithm;
 
+  int[] data = new int[5];
+  data[] = 5; // Sets all values to '5'
+  writeln("data:", data);
+
   auto a = [1,2,3];
   auto b = [4,5,6];
 
