@@ -94,4 +94,7 @@ void main(){
     // If you need thread-safety, look at D's documentation or directly in
     // the Phobos source code for any notes.
 
+    // One other important note, is to not forget that if you're passing
+    // an array into a function, be careful if you think you are actually
+    // modifying that array. Use the 'ref' keyword otherwise!
 }
