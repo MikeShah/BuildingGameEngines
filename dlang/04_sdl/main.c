@@ -1,5 +1,13 @@
+// For this example I am first showing you how to
+// compile the SDL library with C.
+// While this repository has a lot of D code, it is
+// useful to test with this code otherwise to make
+// sure that SDL is properly configured.
+//
+//
+//
 // On linux compile with:
-// gcc main.c -o prog -lSDL3
+// gcc sdl_main.c -o prog -lSDL3
 
 // C Standard Libraries
 #include <stdio.h>
