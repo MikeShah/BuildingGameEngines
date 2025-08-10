@@ -6,16 +6,15 @@ import std.stdio;
 import std.string;
 
 import bindbc.sdl;
-import bindbc.loader.sharedlib;
-import loader=bindbc.loader.sharedlib;
+import loader = bindbc.loader.sharedlib;
 
+// global variable for sdl;
+const SDLSupport ret;
 
 /// At the module level we perform any initialization before our program
 /// executes. Effectively, what I want to do here is make sure that the SDL
 /// library successfully initializes.
 shared static this(){
-// global variable for sdl;
-loader.LoadMsg ret;
 		// Load the SDL libraries from bindbc-sdl
 		// on the appropriate operating system
 		version(Windows){
@@ -38,38 +37,37 @@ loader.LoadMsg ret;
 		}
 
 		// Error if SDL cannot be loaded
-		if(ret != LoadMsg.success){
+		if(ret != sdlSupport){
 				writeln("error loading SDL library");    
 				foreach( info; loader.errors){
 						writeln(info.error,':', info.message);
 				}
 		}
-		if(ret == LoadMsg.noLibrary){
+		if(ret == SDLSupport.noLibrary){
 				writeln("error no library found");    
 		}
-		if(ret == LoadMsg.badLibrary){
+		if(ret == SDLSupport.badLibrary){
 				writeln("Eror badLibrary, missing symbols, perhaps an older or very new version of SDL is causing the problem?");
 		}
 
-		if(ret == LoadMsg.success){
+		if(ret == sdlSupport){
 				import std.conv;
-				int sdlversion = SDL_GetVersion();
-				string msg = "Your SDL version("~sdlversion.to!string~") loaded was: "~
-						to!string(SDL_VERSIONNUM_MAJOR(sdlversion))~"."~
-						to!string(SDL_VERSIONNUM_MINOR(sdlversion))~"."~
-						to!string(SDL_VERSIONNUM_MICRO(sdlversion));
+				SDL_version sdlversion;
+				SDL_GetVersion(&sdlversion);
+				writeln(sdlversion);
+				string msg = "Your SDL version loaded was: "~
+						to!string(sdlversion.major)~"."~
+						to!string(sdlversion.minor)~"."~
+						to!string(sdlversion.patch);
 				writeln(msg);
-				if(SDL_VERSIONNUM_MAJOR(sdlversion)==2){
-					writeln("Note: We are expecting SDL version 3, and found SDL2 on your system. Please install SDL3");
+				if(sdlversion.major==2){
+					writeln("Note: If SDL2 was loaded, it *may* be compatible with SDL3 function calls, but some are different.");
 				}
 		}
 		// Initialize SDL
-    SDL_InitFlags flags = SDL_INIT_VIDEO | SDL_INIT_EVENTS;
-		if(SDL_Init(flags)){
-      writeln("SDL initialized with flags: ",flags);
-		}else{
-				writeln("SDL_Init errors:", fromStringz(SDL_GetError()));
-    }
+		if(SDL_Init(SDL_INIT_EVERYTHING) !=0){
+				writeln("SDL_Init: ", fromStringz(SDL_GetError()));
+		}
 
 }
 
