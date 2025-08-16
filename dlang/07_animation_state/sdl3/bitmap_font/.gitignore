@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/gui_scratch_sdl
+gui_scratch_sdl.so
+gui_scratch_sdl.dylib
+gui_scratch_sdl.dll
+gui_scratch_sdl.a
+gui_scratch_sdl.lib
+gui_scratch_sdl-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst

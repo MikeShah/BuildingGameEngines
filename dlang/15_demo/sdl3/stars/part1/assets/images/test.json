@@ -1,0 +1,16 @@
+{
+"filepath":"./images/assets/test.bmp",
+  "format":{
+    	"width"		: 256,
+    	"height"		: 256,
+    	"tileWidth"	: 64,
+    	"tileHeight"	: 64
+  },
+  "frames":{
+    	"walkDown": [0,1,2,3],
+    	"walkLeft": [4,5,6,7],
+    	"walkRight": [8,9,10,11],
+    	"walkUp": [12,13,14,15],
+  }
+}
+

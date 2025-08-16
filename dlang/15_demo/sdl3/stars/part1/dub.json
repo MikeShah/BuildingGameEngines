@@ -1,0 +1,15 @@
+{
+	"authors": [
+		"mike"
+	],
+	"copyright": "Copyright © 2025, mike",
+	"dependencies": {
+		"bindbc-sdl": "~>2.2.0",
+        "part0":{
+            "path": "./../part0/"
+        }
+	},
+	"description": "A minimal D application.",
+	"license": "proprietary",
+	"name": "prog"
+}
