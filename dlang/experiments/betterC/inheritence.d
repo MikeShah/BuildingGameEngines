@@ -47,4 +47,10 @@ extern(C) void main(){
     // Dog
     entity3.__vTable.speak("d");
     entity3.__vTable.move(10,10);
+
+	// entity3 is now a cat
+	entity3.__vTable = cat;
+	entity3.__vTable.speak("s");
+    entity3.__vTable.move(10,10);
+
 }
