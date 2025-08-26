@@ -42,24 +42,42 @@ void main(){
 }
 
 
+/// The purpose of a function like this is to trade computation and accuracy
+/// (i.e. spend time converting characters, and losing accuracy) to otherwise
+/// save in database/memory storage by only storing the Roman characters
+/// that fit in a simple 8-bit value(char).
+///
+/// You should consider if this is necessary for your purposes, or if it is
+/// otherwise better to commit to using 'dstring' everywhere for precision.
+/// dchar and dstring however come with the trade-off that things like computing
+/// the length of a string are less trivial.
 string UnicodeToASCIIstringApproximation(dstring unicode_input){
 	string result;
 
 	// An imperfect approximation of characters.
-	char[dchar] unicodeTable =	['é':'e',
-	 'è':'e',
-	 'ù':'u',
-	 'ç':'c',
-	 'â':'a',
-	 'ê':'e',
-	 'î':'i',
-	 'ô':'o',
-	 'û':'u',
-	 'ë':'e',
-	 'ï':'i',
-	 'ü':'u',
+	// Note: I've made this 'static' because I do not need to reallocate
+	//       the table every time the function is called.
+	static char[dchar] unicodeTable =	['é':'e',
+	'Á':'A',		'à':'a',		'À':'A',		'â':'a',	
+	'Â':'A',		'ä':'a',		'Ä':'A',		'ã':'a',	
+	'Ã':'A',		'å':'a',		'Å':'A',		'æ':'a',	
+	'Æ':'a',	
+	'ç':'c',		'Ç':'C',		'é':'e',	
+	'É':'E',		'è':'e',		'È':'E',		'ê':'e',	
+	'Ê':'E',		'ë':'e',		'Ë':'E',	
+	'í':'i',		'Í':'I',		'ì':'i',		'Ì':'I',	
+	'î':'i',		'Î':'I',		'ï':'i',		'Ï':'I',	
+	'ñ':'n',		'Ñ':'N',	
+	'ó':'o',		'Ó':'O',		'ò':'o',		'Ò':'O',	
+	'ô':'o',		'Ô':'O',		'ö':'o',		'Ö':'O',	
+	'õ':'o',		'Õ':'O',		'ø':'o',		'Ø':'O',	
+	'œ':'o',		'Œ':'O',		'ß':'B',		'ú':'u',	
+	'Ú':'U',		'ù':'u',		'Ù':'U',	
+	'û':'u',		'Û':'U',		'ü':'u',		'Ü':'U',	
 	];
 
+	// Simply iterate through the characters and make an
+	// 'approximate' substitution
 	foreach(dchar_ ; unicode_input){
 		if(dchar_.isASCII){
 			result ~= dchar_; // Attemps 	
