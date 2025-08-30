@@ -4,61 +4,9 @@
 import std.stdio;
 import std.string;
 
-// Load the SDL2 library
+// Load the SDL library
 import bindbc.sdl;
-import loader = bindbc.loader.sharedlib;
-
-// global variable for sdl;
-const SDLSupport ret;
-
-/// At the module level we perform any initialization before our program
-/// executes. Effectively, what I want to do here is make sure that the SDL
-/// library successfully initializes.
-shared static this(){
-    // Load the SDL libraries from bindbc-sdl
-	// on the appropriate operating system
-    version(Windows){
-        writeln("Searching for SDL on Windows");
-		ret = loadSDL("SDL2.dll");
-	}
-    version(OSX){
-        writeln("Searching for SDL on Mac");
-        ret = loadSDL();
-    }
-    version(linux){ 
-        writeln("Searching for SDL on Linux");
-		ret = loadSDL();
-	}
-
-	// Error if SDL cannot be loaded
-    if(ret != sdlSupport){
-        writeln("error loading SDL library");
-        
-        foreach( info; loader.errors){
-            writeln(info.error,':', info.message);
-        }
-    }
-    if(ret == SDLSupport.noLibrary){
-        writeln("error no library found");    
-    }
-    if(ret == SDLSupport.badLibrary){
-        writeln("Eror badLibrary, missing symbols, perhaps an older or very new version of SDL is causing the problem?");
-    }
-
-    // Initialize SDL
-    if(SDL_Init(SDL_INIT_EVERYTHING) !=0){
-        writeln("SDL_Init: ", fromStringz(SDL_GetError()));
-    }
-}
-
-/// At the module level, when we terminate, we make sure to 
-/// terminate SDL, which is initialized at the start of the application.
-shared static ~this(){
-    // Quit the SDL Application 
-    SDL_Quit();
-	writeln("Ending application--good bye!");
-}
-
+import sdl_abstraction;
 
 interface Command{
 	int Execute();
@@ -89,12 +37,18 @@ class SurfaceOperation : Command{
 
 		// Retrieve the pixel arraay that we want to modify
 		ubyte* pixelArray = cast(ubyte*)mSurface.pixels;
+    writeln("pitch:",mSurface.pitch);
+    writeln("(x,y): (",mXPosition,",",mYPosition,")");
+    writeln("Write Pixel location:",mYPosition*mSurface.pitch + mXPosition);
+    writeln("Write Pixel location:",mYPosition*mSurface.pitch + mXPosition+1);
+    writeln("Write Pixel location:",mYPosition*mSurface.pitch + mXPosition+2);
+    
 		// Change the 'blue' component of the pixels
-		pixelArray[mYPosition*mSurface.pitch + mXPosition*mSurface.format.BytesPerPixel+0] = 255;
+		pixelArray[mYPosition*mSurface.pitch + mXPosition*4+0] = 255;
 			// Change the 'green' component of the pixels
-		pixelArray[mYPosition*mSurface.pitch + mXPosition*mSurface.format.BytesPerPixel+1] = 128;
+		pixelArray[mYPosition*mSurface.pitch + mXPosition*4+1] = 128;
 			// Change the 'red' component of the pixels
-		pixelArray[mYPosition*mSurface.pitch + mXPosition*mSurface.format.BytesPerPixel+2] = 32;
+		pixelArray[mYPosition*mSurface.pitch + mXPosition*4+2] = 32;
 
 		return 0;
 	}
@@ -108,11 +62,11 @@ class SurfaceOperation : Command{
 		// Retrieve the pixel arraay that we want to modify
 		ubyte* pixelArray = cast(ubyte*)mSurface.pixels;
 		// Change the 'blue' component of the pixels
-		pixelArray[mYPosition*mSurface.pitch + mXPosition*mSurface.format.BytesPerPixel+0] = 0;
+		pixelArray[mYPosition*mSurface.pitch + mXPosition*4+0] = 0;
 			// Change the 'green' component of the pixels
-		pixelArray[mYPosition*mSurface.pitch + mXPosition*mSurface.format.BytesPerPixel+1] = 0;
+		pixelArray[mYPosition*mSurface.pitch + mXPosition*4+1] = 0;
 			// Change the 'red' component of the pixels
-		pixelArray[mYPosition*mSurface.pitch + mXPosition*mSurface.format.BytesPerPixel+2] = 0;
+		pixelArray[mYPosition*mSurface.pitch + mXPosition*4+2] = 0;
 		return 0;
 	}
 }
@@ -124,16 +78,14 @@ void main()
 {
     // Create an SDL window
     SDL_Window* window= SDL_CreateWindow("D SDL Painting",
-                                        SDL_WINDOWPOS_UNDEFINED,
-                                        SDL_WINDOWPOS_UNDEFINED,
                                         640,
                                         480, 
-                                        SDL_WINDOW_SHOWN);
+                                        SDL_WINDOW_ALWAYS_ON_TOP);
     // Load the bitmap surface
-    SDL_Surface* imgSurface = SDL_CreateRGBSurface(0,640,480,32,0,0,0,0);
-    // Free the image
+    SDL_Surface* imgSurface = SDL_CreateSurface(640,480,SDL_PIXELFORMAT_RGBA8888);
+    // Free the image at end of main function 
     scope(exit) {
-			SDL_FreeSurface(imgSurface);
+			SDL_DestroySurface(imgSurface);
 	}
 
 	// Flag for determing if we are running the main application loop
@@ -155,17 +107,17 @@ void main()
 		// been pushed into the internal SDL queue. Thus, we poll until there
 		// are '0' events or a NULL event is returned.
 		while(SDL_PollEvent(&e) !=0){
-			if(e.type == SDL_QUIT){
+			if(e.type == SDL_EVENT_QUIT){
 				runApplication= false;
 			}
-			else if(e.type == SDL_MOUSEBUTTONDOWN){
+			else if(e.type == SDL_EVENT_MOUSE_BUTTON_DOWN){
 				drawing=true;
-			}else if(e.type == SDL_MOUSEBUTTONUP){
+			}else if(e.type == SDL_EVENT_MOUSE_BUTTON_UP){
 				drawing=false;
-			}else if(e.type == SDL_MOUSEMOTION && drawing){
+			}else if(e.type == SDL_EVENT_MOUSE_MOTION && drawing){
 				// retrieve the position
-				int xPos = e.button.x;
-				int yPos = e.button.y;
+				int xPos = cast(int)e.button.x;
+				int yPos = cast(int)e.button.y;
 				// Loop through and update specific pixels
 				// NOTE: No bounds checking performed --
 				//       think about how you might fix this :)
