@@ -6,14 +6,14 @@ import bindbc.sdl;
 struct Sprite{
 
     SDL_Texture* mTexture;
-    SDL_Rect     mRectangle;
+    SDL_FRect     mRectangle;
 
     this(SDL_Renderer* renderer, string bitmapFilePath){
         import std.string; // for toZString
                            // Create a texture
         SDL_Surface* mSurface = SDL_LoadBMP(bitmapFilePath.toStringz);
         mTexture = SDL_CreateTextureFromSurface(renderer,mSurface);
-        SDL_FreeSurface(mSurface);
+        SDL_DestroySurface(mSurface);
         // Position the rectangle 
         mRectangle.x = 50;
         mRectangle.y = 50;
@@ -43,7 +43,7 @@ struct Sprite{
         // Copy a texture (or portion of a texture) to another
         // portion of video memory (i.e. a 2D grid of texels 
         // which span the width and height of the window)
-        SDL_RenderCopy(renderer,mTexture,null,&mRectangle);
+        SDL_RenderTexture(renderer,mTexture,null,&mRectangle);
     }
 }
 
@@ -108,18 +108,17 @@ struct WaterSprite{
         // Copy a texture (or portion of a texture) to another
         // portion of video memory (i.e. a 2D grid of texels 
         // which span the width and height of the window)
-        SDL_RenderCopy(renderer,s1.mTexture,null,&s1.mRectangle);
-        SDL_RenderCopy(renderer,s2.mTexture,null,&s2.mRectangle);
+        SDL_RenderTexture(renderer,s1.mTexture,null,&s1.mRectangle);
+        SDL_RenderTexture(renderer,s2.mTexture,null,&s2.mRectangle);
     }
 }
 
 void main()
 {
-    SDL_Window* window = SDL_CreateWindow("Dlang SDL Window",
-            0,0, 640,480, SDL_WINDOW_SHOWN);
+    SDL_Window* window = SDL_CreateWindow("Dlang SDL Window",640,480, SDL_WINDOW_ALWAYS_ON_TOP);
 
     // Create a hardware accelerated mRenderer
-    SDL_Renderer* renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window,null);
 
     Sprite mySprite = Sprite(renderer,"./assets/images/test.bmp");
     auto mySprite2 = WaterSprite(renderer,true,false,"./assets/images/water.bmp");
@@ -130,11 +129,11 @@ void main()
         // Store an SDL Event
         SDL_Event event;
         while(SDL_PollEvent(&event)){
-            if(event.type == SDL_QUIT){
+            if(event.type == SDL_EVENT_QUIT){
                 writeln("Exit event triggered");
                 gameIsRunning= false;
             }
-            if(event.type == SDL_KEYDOWN){
+            if(event.type == SDL_EVENT_KEY_DOWN){
                 writeln("Pressed a key ");
             }
         }

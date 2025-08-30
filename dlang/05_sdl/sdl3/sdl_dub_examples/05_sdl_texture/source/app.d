@@ -6,21 +6,20 @@ import bindbc.sdl;
 void main()
 {
 		// Create na SDL Window
-		SDL_Window* window = SDL_CreateWindow("Dlang SDL Window",
-						0,0, 640,480, SDL_WINDOW_SHOWN);
+		SDL_Window* window = SDL_CreateWindow("Dlang SDL Window",640,480, SDL_WINDOW_ALWAYS_ON_TOP);
 
 		// Create a hardware accelerated mRenderer
-		SDL_Renderer* renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
+		SDL_Renderer* renderer = SDL_CreateRenderer(window,null);
 		// Load the bitmap surface
 		SDL_Surface* myTestImage   = SDL_LoadBMP("./assets/images/test.bmp");
 		// Create a texture from the surface
 		SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer,myTestImage);
 		// Done with the bitmap surface pixels after we create the texture, we have
 		// effectively updated memory to GPU texture.
-		SDL_FreeSurface(myTestImage);
+		SDL_DestroySurface(myTestImage);
 
 		// Rectangle is where we will represent the shape.
-		SDL_Rect rectangle;
+		SDL_FRect rectangle;
 		rectangle.x = 50;
 		rectangle.y = 50;
 		rectangle.w = 100;
@@ -34,11 +33,11 @@ void main()
 				// Handle input from our polled event.
 				// Event is stored in the structure."q
 				while(SDL_PollEvent(&event)){
-						if(event.type == SDL_QUIT){
+						if(event.type == SDL_EVENT_QUIT){
 								writeln("Exit event triggered");
 								gameIsRunning= false;
 						}
-						if(event.type == SDL_KEYDOWN){
+						if(event.type == SDL_EVENT_KEY_DOWN){
 								writeln("Pressed a key ");
 						}
 				}
@@ -50,7 +49,7 @@ void main()
 				// Copy a texture (or portion of a texture) to another
 				// portion of video memory (i.e. a 2D grid of texels 
 				// which span the width and height of the window)
-				SDL_RenderCopy(renderer,texture,null,&rectangle);
+				SDL_RenderTexture(renderer,texture,null,&rectangle);
 
 				// Final step is to present what we have copied into
 				// video memory
