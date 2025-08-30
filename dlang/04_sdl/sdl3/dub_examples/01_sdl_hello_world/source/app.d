@@ -19,7 +19,7 @@ import bindbc.sdl;
 // Entry point to program
 void main()
 {
-	SDL_Window* window = SDL_CreateWindow("Dlang SDL3 Window", 0,0, SDL_WINDOW_ALWAYS_ON_TOP);
+	SDL_Window* window = SDL_CreateWindow("Dlang SDL3 Window", 320,240, SDL_WINDOW_ALWAYS_ON_TOP);
 
 	SDL_Delay(3000);
 	
