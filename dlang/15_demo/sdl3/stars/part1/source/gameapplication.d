@@ -46,15 +46,15 @@ struct GameApplication{
 	SDL_Renderer* mRenderer = null;
 	bool mGameIsRunning = true;
 	// For convenience store mouseX and mouseY
-	int mMouseX,mMouseY;
+	float mMouseX,mMouseY;
 
 	// Constructor
 	this(string title){
 		// Create an SDL window
-		mWindow = SDL_CreateWindow(title.toStringz, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN);
+		mWindow = SDL_CreateWindow(title.toStringz, 640, 480, SDL_WINDOW_ALWAYS_ON_TOP);
 
 		// Create a hardware accelerated mRenderer
-		mRenderer = SDL_CreateRenderer(mWindow,-1,SDL_RENDERER_ACCELERATED);
+		mRenderer = SDL_CreateRenderer(mWindow,null);
 	}
 
 	// Destructor
@@ -71,12 +71,12 @@ struct GameApplication{
 		// Start our event loop
 		while(SDL_PollEvent(&event)){
 			// Handle each specific event
-			if(event.type == SDL_QUIT){
+			if(event.type == SDL_EVENT_QUIT){
 				mGameIsRunning= false;
 			}
 		}
 
-		ubyte* keys = SDL_GetKeyboardState(null);
+		const bool* keys = SDL_GetKeyboardState(null);
 		if(keys[SDL_SCANCODE_UP]){
 			Camera.MoveUp();
 		}
@@ -105,8 +105,8 @@ struct GameApplication{
 
 			// Update Mouse coordinates to world position
 			Vec2f camPos = Camera.GetCameraPosition();
-			int mouseWorldX = mMouseX + cast(int)camPos.x;
-			int mouseWorldY = mMouseY + cast(int)camPos.y;
+			float mouseWorldX = mMouseX + cast(int)camPos.x;
+			float mouseWorldY = mMouseY + cast(int)camPos.y;
 
 			// Compute the world coordinate from the mouse position
 			Vec2f world = ScreenToWorld(mouseWorldX,mouseWorldY,640,480);
@@ -185,6 +185,6 @@ struct GameApplication{
 	auto DrawLine(Vec2f a, Vec2f b) {
 		a = WorldToScreenCoordinates(a.x,a.y,640,480);
 		b = WorldToScreenCoordinates(b.x,b.y,640,480);
-		SDL_RenderDrawLine(mRenderer,cast(int)a.x,cast(int)a.y,cast(int)b.x,cast(int)b.y); 
+		SDL_RenderLine(mRenderer,cast(int)a.x,cast(int)a.y,cast(int)b.x,cast(int)b.y); 
 	}
 }

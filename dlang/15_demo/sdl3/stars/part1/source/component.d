@@ -79,7 +79,7 @@ class ComponentTexture : IComponent{
 		// This component also relies on having a 'transform' such that we can
 		// draw at a specific location
 		override void Render(SDL_Renderer* renderer){
-				SDL_Rect rect;
+				SDL_FRect rect;
 
 				// Figure out position based on game object
 				GameObject go = ObjectManager.GetGameObject(mOwner);	
@@ -108,7 +108,7 @@ class ComponentTexture : IComponent{
 //				writeln(" ========= Transform ==========");
 
 				// Perform the rotation
-				SDL_RenderCopyEx(renderer,mTexture,null,&rect,angle, null,SDL_FLIP_NONE);
+				SDL_RenderTextureRotated(renderer,mTexture,null,&rect,angle, null,SDL_FLIP_NONE);
 		}
 
 		// Load a texture
@@ -119,7 +119,7 @@ class ComponentTexture : IComponent{
 						assert(0, "Failed to find"~filename);
 				}
 				mTexture = SDL_CreateTextureFromSurface(renderer, surf);
-				SDL_FreeSurface(surf);
+				SDL_DestroySurface(surf);
 		}
 
 		private:
@@ -154,7 +154,7 @@ class ComponentColliderCircle : IComponent{
 				for(float i=0; i < 360; i+=1){
 						int xPos = cast(int)x+ cast(int)( mRadius*cos(i.DegreesToRadians) );
 						int yPos = cast(int)y+ cast(int)( mRadius*sin(i.DegreesToRadians) );
-						SDL_RenderDrawPoint(renderer,xPos,yPos);	
+						SDL_RenderPoint(renderer,xPos,yPos);	
 				}
 		}
 
