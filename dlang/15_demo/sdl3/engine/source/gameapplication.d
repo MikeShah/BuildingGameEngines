@@ -86,13 +86,13 @@ struct SceneTree{
 		// TODO: Consider moving this elsewhere
 		void Input(Camera cam){
 				// Get SDL Mouse coordinates
-				int mouseX, mouseY;
+				float mouseX, mouseY;
 				int mask = SDL_GetMouseState(&mouseX,&mouseY);
 				Vec2f cameraPosition=cam.GetPosition();
 
 				if(mask == SDL_BUTTON_LEFT){
-						int newX = mouseX - cast(int)cameraPosition.x;
-						int newY = mouseY - cast(int)cameraPosition.y;
+						int newX = cast(int)mouseX - cast(int)cameraPosition.x;
+						int newY = cast(int)mouseY - cast(int)cameraPosition.y;
 						mGameObjects ~= MakeAsteroidBox("asteroid"~mGameObjects.length.to!string,newX,newY); 
 						// Cheap delay after a mouse click
 						// Better to handle the state, but this is fine for now.
@@ -214,13 +214,11 @@ struct GameApplication{
 
     this(string title){
         SDL_Window* window= SDL_CreateWindow(title.toStringz,
-                SDL_WINDOWPOS_UNDEFINED,
-                SDL_WINDOWPOS_UNDEFINED,
                 640,
                 480, 
-                SDL_WINDOW_SHOWN);
+                SDL_WINDOW_ALWAYS_ON_TOP);
         // Create a hardware accelerated renderer
-        mRenderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
+        mRenderer = SDL_CreateRenderer(window,null);
 
         mActiveScene = Scene(mRenderer,"scene.json",new Camera());
     }
@@ -232,7 +230,7 @@ struct GameApplication{
         // Start our event loop
         while(SDL_PollEvent(&event)){
             // Handle each specific event
-            if(event.type == SDL_QUIT){
+            if(event.type == SDL_EVENT_QUIT){
                 mGameRunning= false;
             }
         }

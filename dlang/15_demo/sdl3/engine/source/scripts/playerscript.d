@@ -28,7 +28,7 @@ class PlayerScript : IScript{
 				writeln("Player world transform:",transform.mWorldMatrix);
 
 				// Get Keyboard input
-				const ubyte* keyboard = SDL_GetKeyboardState(null);
+				const bool* keyboard = SDL_GetKeyboardState(null);
 
 				// Check for movement
 				if(keyboard[SDL_SCANCODE_LEFT] ){ 

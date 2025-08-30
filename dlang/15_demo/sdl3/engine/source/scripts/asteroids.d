@@ -41,8 +41,8 @@ class AsteroidScript : IScript{
 
 				// Check against world bounds 
 				Vec2f position = transform.GetPosition();
-				int bounds_width = bounds.mRect.w;
-				int bounds_height= bounds.mRect.h;
+				float bounds_width = bounds.mRect.w;
+				float bounds_height= bounds.mRect.h;
 			
 				if(position.x > bounds_width){
 					mXDirection = false;

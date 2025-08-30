@@ -16,7 +16,7 @@ class ComponentTexture : IComponent{
 	this(size_t owner){
 		mOwner = owner;
 
-		mRect = SDL_Rect(40,40,40,40);
+		mRect = SDL_FRect(40,40,40,40);
 		mRect.x = 100;
 		mRect.y = 50;
 		mRect.w = 50;
@@ -32,10 +32,10 @@ class ComponentTexture : IComponent{
 	
 	override void Render(SDL_Renderer* r){
 		SDL_SetRenderDrawColor(r,255,0,0,SDL_ALPHA_OPAQUE);
-		SDL_RenderDrawRect(r,&mRect);
+		SDL_RenderRect(r,&mRect);
 	}
 
-	SDL_Rect mRect;	
+	SDL_FRect mRect;	
 	private:
 	size_t mOwner;
 }
@@ -44,7 +44,7 @@ class ComponentCollision : IComponent{
 	this(size_t owner){
 		mOwner = owner;
 
-		mRect = SDL_Rect(40,40,40,40);
+		mRect = SDL_FRect(40,40,40,40);
 	}
 	~this(){}
 	override void Update(){
@@ -54,10 +54,10 @@ class ComponentCollision : IComponent{
 	}
 	override void Render(SDL_Renderer* r){
 		SDL_SetRenderDrawColor(r,0,255,255,SDL_ALPHA_OPAQUE);
-		SDL_RenderDrawRect(r,&mRect);
+		SDL_RenderRect(r,&mRect);
 	}
 
-	SDL_Rect mRect;	
+	SDL_FRect mRect;	
 	private:
 	size_t mOwner;
 }
