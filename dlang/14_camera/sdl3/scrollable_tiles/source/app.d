@@ -12,6 +12,7 @@ import player;
 
 // Load the SDL2 library
 import bindbc.sdl;
+import sdl_abstraction;
 
 
 
@@ -21,14 +22,12 @@ void main()
     writeln("Arrowkeys to move, hold 'space' key for tile map selctor demo"); 
     // Create an SDL window
     SDL_Window* window= SDL_CreateWindow("D SDL Tilemap Example",
-                                        SDL_WINDOWPOS_UNDEFINED,
-                                        SDL_WINDOWPOS_UNDEFINED,
                                         640,
                                         480, 
-                                        SDL_WINDOW_SHOWN);
+                                        SDL_WINDOW_ALWAYS_ON_TOP);
     // Create a hardware accelerated renderer
     SDL_Renderer* renderer = null;
-    renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
+    renderer = SDL_CreateRenderer(window,null);
 
     // Load our tiles from an image
     TileSet ts = TileSet(renderer, "./assets/kenney_roguelike-modern-city/Tilemap/tilemap_packed.bmp", 16,37,28);
@@ -51,13 +50,13 @@ void main()
         // Start our event loop
         while(SDL_PollEvent(&event)){
             // Handle each specific event
-            if(event.type == SDL_QUIT){
+            if(event.type == SDL_EVENT_QUIT){
                 gameIsRunning= false;
             }
         }
 
         // Get Keyboard input
-        const ubyte* keyboard = SDL_GetKeyboardState(null);
+        const bool* keyboard = SDL_GetKeyboardState(null);
 
 				// Players World Space coordinates
         int playerX = player.GetX();
