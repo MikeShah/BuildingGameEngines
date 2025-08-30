@@ -21,11 +21,10 @@ struct GameApplication{
 		// Constructor
 		this(string title){
 				// Create an SDL window
-				mWindow = SDL_CreateWindow(title.toStringz, SDL_WINDOWPOS_UNDEFINED, 
-								SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN);
+				mWindow = SDL_CreateWindow(title.toStringz,640, 480, SDL_WINDOW_ALWAYS_ON_TOP);
 
 				// Create a hardware accelerated mRenderer
-				mRenderer = SDL_CreateRenderer(mWindow,-1,SDL_RENDERER_ACCELERATED);
+				mRenderer = SDL_CreateRenderer(mWindow,null);
 				// Load the bitmap surface
 				mySprite = Sprite(mRenderer,"./assets/images/test.bmp");
 		}
@@ -44,7 +43,7 @@ struct GameApplication{
 				// Start our event loop
 				while(SDL_PollEvent(&event)){
 						// Handle each specific event
-						if(event.type == SDL_QUIT){
+						if(event.type == SDL_EVENT_QUIT){
 								mGameIsRunning= false;
 						}
 				}

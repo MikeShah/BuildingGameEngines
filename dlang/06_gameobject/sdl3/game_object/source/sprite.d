@@ -7,10 +7,14 @@ struct Sprite{
 
 		// Circle Collider
 		ColliderCircle mColliderCircle;
+    int mXDirection=1;
+    int mYDirection=1;
+    int x =0;
+    int y =0;
 
 
 		SDL_Texture* mTexture;
-		SDL_Rect     mRectangle;
+		SDL_FRect     mRectangle;
 		int mFrame =0;
 
 		this(SDL_Renderer* renderer, string bitmapFilePath){
@@ -18,7 +22,7 @@ struct Sprite{
 													 // Create a texture
 				SDL_Surface* mSurface = SDL_LoadBMP(bitmapFilePath.toStringz);
 				mTexture = SDL_CreateTextureFromSurface(renderer,mSurface);
-				SDL_FreeSurface(mSurface);
+				SDL_DestroySurface(mSurface);
 				// Position the rectangle 
 				mRectangle.x = 50;
 				mRectangle.y = 50;
@@ -35,21 +39,17 @@ struct Sprite{
 
 		void Input(){}
 		void Update(){
-				static int x =0;
-				static int y =0;
-				static int xDirection=1;
-				static int yDirection=1;
 
-				if(xDirection==1){ ++x; }
-				else if(xDirection==-1){ --x; }
+				if(mXDirection==1){ ++x; }
+				else if(mXDirection==-1){ --x; }
 
-				if(yDirection==1){ ++y; }
-				else if(yDirection==-1){ --y; }
+				if(mYDirection==1){ ++y; }
+				else if(mYDirection==-1){ --y; }
 
-				if(mRectangle.x > 540){xDirection=-1;}
-				if(mRectangle.x < 0){xDirection=1;}
-				if(mRectangle.y > 380){yDirection=-1;}
-				if(mRectangle.y < 0){yDirection=1;}
+				if(mRectangle.x > 540){mXDirection=-1;}
+				if(mRectangle.x < 0){mXDirection=1;}
+				if(mRectangle.y > 380){mYDirection=-1;}
+				if(mRectangle.y < 0){mYDirection=1;}
 
 				mRectangle.x = 50+ x;
 				mRectangle.y = 50+ y;
@@ -73,7 +73,7 @@ struct Sprite{
 				// to draw from our renderer. We can think of this as 'copying'
 				// data -- but really we are just selecting the 'texture coordinates'
 				// within our GPU memory of what to draw.
-				SDL_Rect selection;
+				SDL_FRect selection;
 				selection.x = 64*mFrame;
 				selection.y = 0;
 				selection.w = 64;
@@ -81,7 +81,7 @@ struct Sprite{
 				// Copy a texture (or portion of a texture) to another
 				// portion of video memory (i.e. a 2D grid of texels 
 				// which span the width and height of the window)
-				SDL_RenderCopy(renderer,mTexture,&selection,&mRectangle);
+				SDL_RenderTexture(renderer,mTexture,&selection,&mRectangle);
 
 				mColliderCircle.Render(renderer);
 		}

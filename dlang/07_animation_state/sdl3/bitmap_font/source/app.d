@@ -6,57 +6,7 @@ import std.string;
 
 // Load the SDL2 library
 import bindbc.sdl;
-import loader = bindbc.loader.sharedlib;
-
-// global variable for sdl;
-const SDLSupport ret;
-
-/// At the module level we perform any initialization before our program
-/// executes. Effectively, what I want to do here is make sure that the SDL
-/// library successfully initializes.
-shared static this(){
-		// Load the SDL libraries from bindbc-sdl
-		// on the appropriate operating system
-    version(Windows){
-    		writeln("Searching for SDL on Windows");
-				ret = loadSDL("SDL2.dll");
-		}
-  	version(OSX){
-      	writeln("Searching for SDL on Mac");
-        ret = loadSDL();
-    }
-    version(linux){ 
-      	writeln("Searching for SDL on Linux");
-				ret = loadSDL();
-		}
-
-		// Error if SDL cannot be loaded
-    if(ret != sdlSupport){
-        writeln("error loading SDL library");    
-        foreach( info; loader.errors){
-            writeln(info.error,':', info.message);
-        }
-    }
-    if(ret == SDLSupport.noLibrary){
-        writeln("error no library found");    
-    }
-    if(ret == SDLSupport.badLibrary){
-        writeln("Eror badLibrary, missing symbols, perhaps an older or very new version of SDL is causing the problem?");
-    }
-
-    // Initialize SDL
-    if(SDL_Init(SDL_INIT_EVERYTHING) !=0){
-        writeln("SDL_Init: ", fromStringz(SDL_GetError()));
-    }
-}
-
-/// At the module level, when we terminate, we make sure to 
-/// terminate SDL, which is initialized at the start of the application.
-shared static ~this(){
-    // Quit the SDL Application 
-    SDL_Quit();
-		writeln("Ending application--good bye!");
-}
+import sdl_abstraction;
 
 
 class Widget{
@@ -66,7 +16,7 @@ class Widget{
 
 class Button : Widget{
     // Rectangle is where we will represent the shape
-    SDL_Rect mRectangle;
+    SDL_FRect mRectangle;
     SDL_Texture* mFontTexture;
     char[] mText;
 
@@ -90,24 +40,24 @@ class Button : Widget{
             mFontTexture = SDL_CreateTextureFromSurface(renderer,img);
             // Done with the bitmap surface pixels after we create the texture, we have
             // effectively updated memory to GPU texture.
-            SDL_FreeSurface(img);
+            SDL_DestroySurface(img);
         }
         // Draw our button
         SDL_SetRenderDrawColor(renderer,100,190,255,SDL_ALPHA_OPAQUE);
-        SDL_RenderDrawRect(renderer,&mRectangle);
+        SDL_RenderRect(renderer,&mRectangle);
 
         // Handle tet drawing
         // For each character, sample in correct position in texture and paste in text
         foreach(int idx,c ; mText){
             // Next position to draw to
-            SDL_Rect display;
+            SDL_FRect display;
             display.x = mRectangle.x + 16*idx;
             display.y = mRectangle.y;
             display.w = 16;
             display.h = 16;
     
             // Select correct portion of texture
-            SDL_Rect select;
+            SDL_FRect select;
             // Note: Need to offset ASCII character to appropriate position in font
             //       This may vary based on your image.
             //       You'll also likely want 'empty' spaces and other chracters.
@@ -117,7 +67,7 @@ class Button : Widget{
             select.w = 16;
             select.h = 16;
             
-            SDL_RenderCopy(renderer,mFontTexture,&select,&display);
+            SDL_RenderTexture(renderer,mFontTexture,&select,&display);
         }
     }
 
@@ -129,14 +79,12 @@ void main()
 {
     // Create an SDL window
     SDL_Window* window= SDL_CreateWindow("D SDL Bitmap Font",
-                                        SDL_WINDOWPOS_UNDEFINED,
-                                        SDL_WINDOWPOS_UNDEFINED,
                                         640,
                                         480, 
-                                        SDL_WINDOW_SHOWN);
+                                        SDL_WINDOW_ALWAYS_ON_TOP);
 	// Create a hardware accelerated renderer
 	SDL_Renderer* renderer = null;
-	renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
+	renderer = SDL_CreateRenderer(window,null);
 
 
     auto myButton = new Button(cast(char[])"MIKE",30,30,100,100);
@@ -151,7 +99,7 @@ void main()
         // Start our event loop
         while(SDL_PollEvent(&event)){
             // Handle each specific event
-            if(event.type == SDL_QUIT){
+            if(event.type == SDL_EVENT_QUIT){
                 gameIsRunning= false;
             }
         }
