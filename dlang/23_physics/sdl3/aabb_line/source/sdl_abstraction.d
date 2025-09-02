@@ -1,80 +1,82 @@
-/// @file: 01_sdl_dub_examples/01_sdl_hello_world/sdl_abstraction.d
-// Load the SDL2 library
+/// @file: sdl_abstraction.d
+// Load the SDL3 library
 module sdl_abstraction;
 
 import std.stdio;
 import std.string;
 
 import bindbc.sdl;
-import loader = bindbc.loader.sharedlib;
+import bindbc.loader.sharedlib;
+import loader=bindbc.loader.sharedlib;
 
-// global variable for sdl;
-const SDLSupport ret;
 
 /// At the module level we perform any initialization before our program
 /// executes. Effectively, what I want to do here is make sure that the SDL
 /// library successfully initializes.
 shared static this(){
-		// Load the SDL libraries from bindbc-sdl
-		// on the appropriate operating system
-		version(Windows){
-				writeln("Searching for SDL on Windows");
-				// NOTE: Windows folks I've defaulted into SDL3, but
-				// 			 will fallback to try to find SDL2 otherwise.
-				ret = loadSDL("SDL3.dll");
-				if(ret != sdlSupport){
-						writeln("Falling back on Windows to find SDL2.dll");
-						ret = loadSDL("SDL2.dll");
-				}
-		}
-		version(OSX){
-				writeln("Searching for SDL on Mac");
-				ret = loadSDL();
-		}
-		version(linux){ 
-				writeln("Searching for SDL on Linux");
-				ret = loadSDL();
-		}
-
-		// Error if SDL cannot be loaded
+	// global variable for sdl;
+	loader.LoadMsg ret;
+	// Load the SDL libraries from bindbc-sdl
+	// on the appropriate operating system
+	version(Windows){
+		writeln("Searching for SDL on Windows");
+		// NOTE: Windows folks I've defaulted into SDL3, but
+		// 			 will fallback to try to find SDL2 otherwise.
+		ret = loadSDL("SDL3.dll");
 		if(ret != sdlSupport){
-				writeln("error loading SDL library");    
-				foreach( info; loader.errors){
-						writeln(info.error,':', info.message);
-				}
+			writeln("Falling back on Windows to find SDL2.dll");
+			ret = loadSDL("SDL2.dll");
 		}
-		if(ret == SDLSupport.noLibrary){
-				writeln("error no library found");    
-		}
-		if(ret == SDLSupport.badLibrary){
-				writeln("Eror badLibrary, missing symbols, perhaps an older or very new version of SDL is causing the problem?");
-		}
+	}
+	version(OSX){
+		writeln("Searching for SDL on Mac");
+		ret = loadSDL();
+	}
+	version(linux){ 
+		writeln("Searching for SDL on Linux");
+		ret = loadSDL();
+	}
 
-		if(ret == sdlSupport){
-				import std.conv;
-				SDL_version sdlversion;
-				SDL_GetVersion(&sdlversion);
-				writeln(sdlversion);
-				string msg = "Your SDL version loaded was: "~
-						to!string(sdlversion.major)~"."~
-						to!string(sdlversion.minor)~"."~
-						to!string(sdlversion.patch);
-				writeln(msg);
-				if(sdlversion.major==2){
-					writeln("Note: If SDL2 was loaded, it *may* be compatible with SDL3 function calls, but some are different.");
-				}
+	// Error if SDL cannot be loaded
+	if(ret != LoadMsg.success){
+		writeln("error loading SDL library");    
+		foreach( info; loader.errors){
+			writeln(info.error,':', info.message);
 		}
-		// Initialize SDL
-		if(SDL_Init(SDL_INIT_EVERYTHING) !=0){
-				writeln("SDL_Init: ", fromStringz(SDL_GetError()));
+	}
+	if(ret == LoadMsg.noLibrary){
+		writeln("error no library found");    
+	}
+	if(ret == LoadMsg.badLibrary){
+		writeln("Eror badLibrary, missing symbols, perhaps an older or very new version of SDL is causing the problem?");
+	}
+
+	if(ret == LoadMsg.success){
+		import std.conv;
+		int sdlversion = SDL_GetVersion();
+		string msg = "Your SDL version("~sdlversion.to!string~") loaded was: "~
+			to!string(SDL_VERSIONNUM_MAJOR(sdlversion))~"."~
+			to!string(SDL_VERSIONNUM_MINOR(sdlversion))~"."~
+			to!string(SDL_VERSIONNUM_MICRO(sdlversion));
+		writeln(msg);
+		if(SDL_VERSIONNUM_MAJOR(sdlversion)==2){
+			writeln("Note: We are expecting SDL version 3, and found SDL2 on your system. Please install SDL3");
 		}
+	}
+	// Initialize SDL
+	SDL_InitFlags flags = SDL_INIT_VIDEO | SDL_INIT_EVENTS;
+	if(SDL_Init(flags)){
+		writeln("SDL initialized with flags: ",flags);
+	}else{
+		writeln("SDL_Init errors:", fromStringz(SDL_GetError()));
+	}
 
 }
 
 /// At the module level, when we terminate, we make sure to 
 /// terminate SDL, which is initialized at the start of the application.
 shared static ~this(){
-		// Quit the SDL Application 
-		SDL_Quit();
-		writeln("Shutting Down SDL");
+	// Quit the SDL Application 
+	SDL_Quit();
+	writeln("Shutting Down SDL");
 }

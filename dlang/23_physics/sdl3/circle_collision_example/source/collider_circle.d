@@ -24,7 +24,7 @@ struct ColliderCircle{
 		for(float i=0; i < 360; i+=1){
 				int xPos = cast(int)x+ cast(int)( radius*cos(i.DegreesToRadians) );
 				int yPos = cast(int)y+ cast(int)( radius*sin(i.DegreesToRadians) );
-				SDL_RenderDrawPoint(render,xPos,yPos);	
+				SDL_RenderPoint(render,xPos,yPos);	
 		}
 	}
 
