@@ -1,8 +1,3 @@
-// This example shows how to implement
-// single inheritence without having to
-// rely on the full d language, but only the 'betterC' subset
-//
-
 // rdmd -betterC inheritence.d
 import core.stdc.stdio;
 
