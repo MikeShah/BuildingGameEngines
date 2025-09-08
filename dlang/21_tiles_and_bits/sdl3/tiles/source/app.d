@@ -13,6 +13,7 @@ import player;
 
 // Load the SDL2 library
 import bindbc.sdl;
+import sdl_abstraction;
 
 
 interface Command{
@@ -62,13 +63,13 @@ void main()
         // Start our event loop
         while(SDL_PollEvent(&event)){
             // Handle each specific event
-            if(event.type == SDL_QUIT){
+            if(event.type == SDL_EVENT_QUIT){
                 gameIsRunning= false;
             }
         }
 
         // Get Keyboard input
-        const ubyte* keyboard = SDL_GetKeyboardState(null);
+        const bool* keyboard = SDL_GetKeyboardState(null);
 
         int playerX = player.GetX();
         int playerY = player.GetY();
