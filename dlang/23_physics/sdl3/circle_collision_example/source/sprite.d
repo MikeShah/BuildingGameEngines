@@ -10,7 +10,11 @@ struct Sprite{
 
 
 		SDL_Texture* mTexture;
-		SDL_Rect     mRectangle;
+		SDL_FRect     mRectangle;
+    int x =0;
+    int y =0;
+    int xDirection=1;
+    int yDirection=1;
 		int mFrame =0;
 
 		this(SDL_Renderer* renderer, string bitmapFilePath){
@@ -18,7 +22,7 @@ struct Sprite{
 													 // Create a texture
 				SDL_Surface* mSurface = SDL_LoadBMP(bitmapFilePath.toStringz);
 				mTexture = SDL_CreateTextureFromSurface(renderer,mSurface);
-				SDL_FreeSurface(mSurface);
+				SDL_DestroySurface(mSurface);
 				// Position the rectangle 
 				mRectangle.x = 50;
 				mRectangle.y = 50;
@@ -35,10 +39,6 @@ struct Sprite{
 
 		void Input(){}
 		void Update(){
-				static int x =0;
-				static int y =0;
-				static int xDirection=1;
-				static int yDirection=1;
 
 				if(xDirection==1){ ++x; }
 				else if(xDirection==-1){ --x; }
@@ -73,7 +73,7 @@ struct Sprite{
 				// to draw from our renderer. We can think of this as 'copying'
 				// data -- but really we are just selecting the 'texture coordinates'
 				// within our GPU memory of what to draw.
-				SDL_Rect selection;
+				SDL_FRect selection;
 				selection.x = 64*mFrame;
 				selection.y = 0;
 				selection.w = 64;
@@ -81,7 +81,7 @@ struct Sprite{
 				// Copy a texture (or portion of a texture) to another
 				// portion of video memory (i.e. a 2D grid of texels 
 				// which span the width and height of the window)
-				SDL_RenderCopy(renderer,mTexture,&selection,&mRectangle);
+				SDL_RenderTexture(renderer,mTexture,&selection,&mRectangle);
 
 				mColliderCircle.Render(renderer);
 		}

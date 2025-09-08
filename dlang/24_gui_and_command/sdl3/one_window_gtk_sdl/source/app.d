@@ -35,7 +35,7 @@ import std.string;
 
 // Load the SDL2 library
 import bindbc.sdl;
-import loader = bindbc.loader.sharedlib;
+import sdl_abstraction;
 
 
 // Some global variables
@@ -47,57 +47,6 @@ SDL_Surface*    imgSurface= null;
 bool            drawing = false;
 double          gxPos,gyPos;
 Context         gCairoContext;
-
-// global variable for sdl;
-const SDLSupport ret;
-
-/// At the module level we perform any initialization before our program
-/// executes. Effectively, what I want to do here is make sure that the SDL
-/// library successfully initializes.
-shared static this(){
-    // Load the SDL libraries from bindbc-sdl
-	// on the appropriate operating system
-    version(Windows){
-        writeln("Searching for SDL on Windows");
-		ret = loadSDL("SDL2.dll");
-	}
-    version(OSX){
-        writeln("Searching for SDL on Mac");
-        ret = loadSDL();
-    }
-    version(linux){ 
-        writeln("Searching for SDL on Linux");
-		ret = loadSDL();
-	}
-
-	// Error if SDL cannot be loaded
-    if(ret != sdlSupport){
-        writeln("error loading SDL library");
-        
-        foreach( info; loader.errors){
-            writeln(info.error,':', info.message);
-        }
-    }
-    if(ret == SDLSupport.noLibrary){
-        writeln("error no library found");    
-    }
-    if(ret == SDLSupport.badLibrary){
-        writeln("Eror badLibrary, missing symbols, perhaps an older or very new version of SDL is causing the problem?");
-    }
-
-    // Initialize SDL
-    if(SDL_Init(SDL_INIT_EVERYTHING) !=0){
-        writeln("SDL_Init: ", fromStringz(SDL_GetError()));
-    }
-}
-
-/// At the module level, when we terminate, we make sure to 
-/// terminate SDL, which is initialized at the start of the application.
-shared static ~this(){
-    // Quit the SDL Application 
-    SDL_Quit();
-	writeln("Ending application--good bye!");
-}
 
 // Interface for a command
 interface Command{
@@ -130,12 +79,13 @@ class SurfaceOperation : Command{
 
 		// Retrieve the pixel arraay that we want to modify
 		ubyte* pixelArray = cast(ubyte*)mSurface.pixels;
+
 		// Change the 'blue' component of the pixels
-		pixelArray[mYPosition*mSurface.pitch + mXPosition*mSurface.format.BytesPerPixel+0] = 255;
+		pixelArray[mYPosition*mSurface.pitch + mXPosition*4+0] = 255;
 			// Change the 'green' component of the pixels
-		pixelArray[mYPosition*mSurface.pitch + mXPosition*mSurface.format.BytesPerPixel+1] = 128;
+		pixelArray[mYPosition*mSurface.pitch + mXPosition*4+1] = 128;
 			// Change the 'red' component of the pixels
-		pixelArray[mYPosition*mSurface.pitch + mXPosition*mSurface.format.BytesPerPixel+2] = 32;
+		pixelArray[mYPosition*mSurface.pitch + mXPosition*4+2] = 32;
 
 		return 0;
 	}
@@ -149,11 +99,11 @@ class SurfaceOperation : Command{
 		// Retrieve the pixel arraay that we want to modify
 		ubyte* pixelArray = cast(ubyte*)mSurface.pixels;
 		// Change the 'blue' component of the pixels
-		pixelArray[mYPosition*mSurface.pitch + mXPosition*mSurface.format.BytesPerPixel+0] = 0;
+		pixelArray[mYPosition*mSurface.pitch + mXPosition*4+0] = 0;
 			// Change the 'green' component of the pixels
-		pixelArray[mYPosition*mSurface.pitch + mXPosition*mSurface.format.BytesPerPixel+1] = 0;
+		pixelArray[mYPosition*mSurface.pitch + mXPosition*4+1] = 0;
 			// Change the 'red' component of the pixels
-		pixelArray[mYPosition*mSurface.pitch + mXPosition*mSurface.format.BytesPerPixel+2] = 0;
+		pixelArray[mYPosition*mSurface.pitch + mXPosition*4+2] = 0;
 		return 0;
 	}
 }
@@ -235,13 +185,20 @@ static bool RunSDL()
     //                                                but not yet released)
 
     if(window==null){
-        window = SDL_CreateWindowFrom(cast(const(void)*)gdkWindowXID);
+      // SDL2 way of doing this
+//        window = SDL_CreateWindowFrom(cast(const(void)*)gdkWindowXID);
+        // In SDL3, we need to use some of the properties to otherwise help faciliate
+        // our window creation.
+        SDL_PropertiesID props = SDL_CreateProperties();
+        SDL_SetNumberProperty(props,SDL_PROP_WINDOW_CREATE_X11_WINDOW_NUMBER,gdkWindowXID);
+        window = SDL_CreateWindowWithProperties(props);
+
         // Do some error checking to see if we retrieve a window
         if(window==null){
             writeln("window-SDL_GetError()",SDL_GetError());
         }
         // Load the bitmap surface
-        imgSurface = SDL_CreateRGBSurface(0,640,480,32,0,0,0,0);
+        imgSurface = SDL_CreateSurface(640,480,SDL_PIXELFORMAT_RGBA8888);
         if(imgSurface==null){
             writeln("imgSurface-SDL_GetError()",SDL_GetError());
         }
