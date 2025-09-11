@@ -3,9 +3,9 @@ import bindbc.sdl;
 
 struct Sprite{
 
-		SDL_Texture* mTexture;
-		SDL_FRect     mRectangle;
-		int mFrame =0;
+	SDL_Texture* mTexture;
+	SDL_FRect     mRectangle;
+	int mFrame =0;
     int x =0;
     int y =0;
     int xDirection=1;
