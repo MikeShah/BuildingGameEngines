@@ -1,6 +1,6 @@
 // @file ./d_dll/main.d
 //
-// Note: Make sure to cmpile .dll to a shared library first
+// Note: Make sure to compile .dll to a shared library first
 //
 // dmd -c main.d
 // dmd main.o -L-ldl -defaultlib=libphobos2.so -L-rpath=. -map -of=prog 
