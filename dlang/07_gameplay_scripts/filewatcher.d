@@ -1,4 +1,7 @@
 // @file filewatcher.d
+// rdmd filewatcher.d
+// 
+// Try changing the 'data.txt' file while the program runs.
 import std.stdio;
 import std.file;
 import std.datetime;
