@@ -1,20 +1,20 @@
 /// @file: /sdl_sound/app.d
-import std.stdio;
-import sdl_abstraction;
+import std.stdio, std.string;
 import bindbc.sdl;
-import std.string;
+
 import sound;
+import sdl_abstraction;
 
 
 struct Sprite{
 
     SDL_Texture* mTexture;
-    SDL_Rect     mRectangle;
+    SDL_FRect    mRectangle;
 
     this(SDL_Renderer* renderer, string bitmapFilePath){
         SDL_Surface* mSurface = SDL_LoadBMP(bitmapFilePath.toStringz);
         mTexture = SDL_CreateTextureFromSurface(renderer,mSurface);
-        SDL_FreeSurface(mSurface);
+        SDL_DestroySurface(mSurface);
         // Position the rectangle 
         mRectangle.x = 50;
         mRectangle.y = 50;
@@ -36,37 +36,39 @@ struct Sprite{
         // Copy a texture (or portion of a texture) to another
         // portion of video memory (i.e. a 2D grid of texels 
         // which span the width and height of the window)
-        SDL_RenderCopy(renderer,mTexture,null,&mRectangle);
+        SDL_RenderTexture(renderer,mTexture,null,&mRectangle);
     }
 }
 
 void main()
 {
-    SDL_Window* window = SDL_CreateWindow("Dlang SDL Window",
-            0,0, 640,480, SDL_WINDOW_SHOWN);
+
+	SDL_InitFlags audioSubSystem = SDL_WasInit(SDL_INIT_AUDIO);
+	writeln("Was Audio Subystem initialized? (0 if not, 'audio' if so):", audioSubSystem);
+
+    SDL_Window* window = SDL_CreateWindow("Dlang SDL Window",640 ,480, SDL_WINDOW_ALWAYS_ON_TOP);
 
     // Create a hardware accelerated mRenderer
-    SDL_Renderer* renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, null);
 
     // Create our sprite
     Sprite mySprite = Sprite(renderer,"./assets/images/test.bmp");
 
     // Create our Sound
     Sound mySound = Sound("./assets/sounds/collide.wav");
-    mySound.SetupDevice();
-        mySound.PlaySound();
 
     bool gameIsRunning=true;
     while(gameIsRunning){
         // Store an SDL Event
         SDL_Event event;
         while(SDL_PollEvent(&event)){
-            if(event.type == SDL_QUIT){
+            if(event.type == SDL_EVENT_QUIT){
                 writeln("Exit event triggered");
                 gameIsRunning= false;
             }
-            if(event.type == SDL_KEYDOWN){
-                writeln("Pressed a key ");
+            if(event.type == SDL_EVENT_KEY_DOWN){
+				mySound.ResumeSound();
+        		mySound.PlaySound();
             }
         }
 
