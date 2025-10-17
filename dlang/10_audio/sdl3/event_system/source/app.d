@@ -50,8 +50,8 @@ struct GameApplication{
 
 				mAppState.PushEvent(msg);
 
-        // Slightly cleaner way of using struct
-        Event msg = Event(type: EventEnum.MoveSprite, move_sprite_event.mSpritePtr: &mySprite, move_sprite_event.x : 1,						  			  move_sprite_event.y : 1);
+        // TODO: Attempting a slightly cleaner way of using struct
+      //  Event msg = Event(type: EventEnum.MoveSprite, move_sprite_event.mSpritePtr: &mySprite, move_sprite_event.x : 1,						  			  move_sprite_event.y : 1);
 			}
 		}
 	}
