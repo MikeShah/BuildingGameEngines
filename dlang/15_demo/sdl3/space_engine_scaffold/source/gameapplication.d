@@ -19,7 +19,7 @@ class Camera{
         mTransform.mLocalMatrix = MakeTranslate(x,y);
     }
     Vec2f GetPosition(){
-        Vec2f result = mTransform.mLocalMatrix.Frommat3GetTranslation();
+        Vec2f result = mTransform.mLocalMatrix.FromMat3GetTranslation();
         return result;
     }
 }
@@ -109,7 +109,7 @@ struct SceneTree{
         GameObject go = GameObject.GetGameObject("MainPlayer");
         // Set the camera to center on the main player
         auto playerTransform= cast(ComponentTransform)go.GetComponent(ComponentType.TRANSFORM);
-        Vec2f xy = playerTransform.mLocalMatrix.Frommat3GetTranslation();
+        Vec2f xy = playerTransform.mLocalMatrix.FromMat3GetTranslation();
         cam.PositionCamera(-xy.x+100,-xy.y+100);
 
         // Update scripts
@@ -138,7 +138,7 @@ struct SceneTree{
                 writeln(objComponent.GetName()," - collision render");
                 col.Render(mRendererRef);
                 auto transform = cast(ComponentTransform)objComponent.GetComponent(ComponentType.TRANSFORM);
-                Vec2f pos = transform.mWorldMatrix.Frommat3GetTranslation() ;
+                Vec2f pos = transform.mWorldMatrix.FromMat3GetTranslation() ;
                 col.mRect.x = cast(int)pos.x;
                 col.mRect.y = cast(int)pos.y;
             }
@@ -151,7 +151,7 @@ struct SceneTree{
                 tex.Render(mRendererRef);
                 
                 auto transform = cast(ComponentTransform)objComponent.GetComponent(ComponentType.TRANSFORM);
-								Vec2f pos = transform.mWorldMatrix.Frommat3GetTranslation() ;
+								Vec2f pos = transform.mWorldMatrix.FromMat3GetTranslation() ;
                 writeln(tex.mRect);
                 tex.mRect.x = cast(int)pos.x;
                 tex.mRect.y = cast(int)pos.y;

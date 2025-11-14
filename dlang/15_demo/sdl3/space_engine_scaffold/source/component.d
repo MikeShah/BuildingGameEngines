@@ -91,15 +91,15 @@ class ComponentTransform : IComponent{
     }
 
     Vec2f GetPosition(){
-        return mLocalMatrix.Frommat3GetTranslation();
+        return mLocalMatrix.FromMat3GetTranslation();
     }
 
     Vec2f GetScale(){
-        return mLocalMatrix.Frommat3GetScale();
+        return mLocalMatrix.FromMat3GetScale();
     }
 
     float GetAngle(){
-        return mLocalMatrix.Frommat3GetRotation();
+        return mLocalMatrix.FromMat3GetRotation();
     }
 
     mat3 mLocalMatrix;
