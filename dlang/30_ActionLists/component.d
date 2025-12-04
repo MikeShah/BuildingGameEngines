@@ -38,10 +38,17 @@ abstract class IComponent{
 class ComponentTexture : IComponent{
 	override string GetComponentName() const{ return "texture"; }
 
+  this(){}
+
+  this(uint width, uint height){
+    mWidth = width;
+    mHeight = height;
+  }
+
 	override void Update(){
 		// Note: The 'cast' is so I can get the address and verify we
 		//       have different components
-		writeln("Updating Texture Component: ",cast(void*)this);
+		writeln("Updating Texture Component: ",cast(void*)this, "(", mWidth,",",mHeight,")");
 	}
 	private:
 	uint mWidth, mHeight;
