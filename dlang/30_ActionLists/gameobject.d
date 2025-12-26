@@ -38,7 +38,7 @@ struct GameObject{
 		}
 	}
 
-	// Template parameter
+	// Add component using factory
 	void AddComponent(string componentname){
 		// Create the component
 		IComponent c = ComponentFactory(componentname);
@@ -47,6 +47,16 @@ struct GameObject{
 		// Add to game objects map of components
 		mComponents[componentname] = c; 
 	}
+
+  // Add component using template in which we forward the
+  // arguments to the constructor to build the component
+  void AddComponent(T, Args...)(Args args){
+  		  T c = new T(args);
+		// Assign owner
+		c.mOwner = &this;
+		// Add to game objects map of components
+		mComponents[c.GetComponentName()] = c;
+  }
 	
 	protected:
 	// Common components for all game objects

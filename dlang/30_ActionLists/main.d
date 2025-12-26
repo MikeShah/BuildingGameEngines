@@ -6,6 +6,9 @@ void main(string[] args){
 	go.AddComponent("action");
 	go.AddComponent("texture");
 	go.AddComponent("collider");
+  // Example of adding components using a template with
+  // arguments that expand to fill the construtcor
+//  go.AddComponent!(ComponentTexture)(10,20);
 
 	go.GetComponent!ComponentAction("action").AddAction(new OneTimeAction("One Named Action"));
 	go.GetComponent!ComponentAction("action").AddAction(new RepeatingAction("Repeating Action Algorithm",3));
