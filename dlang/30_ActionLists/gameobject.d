@@ -45,7 +45,8 @@ struct GameObject{
 		// Assign owner
 		c.mOwner = &this;
 		// Add to game objects map of components
-		mComponents[componentname] = c; 	}
+		mComponents[componentname] = c; 
+	}
 	
 	protected:
 	// Common components for all game objects
