@@ -69,7 +69,6 @@ shared static this(){
 	}else{
 		writeln("SDL_Init errors:", fromStringz(SDL_GetError()));
 	}
-
 }
 
 /// At the module level, when we terminate, we make sure to 

@@ -7,7 +7,7 @@ import widget;
 void main()
 {
     SDL_Window* window = SDL_CreateWindow("Dlang SDL3 GUI",640,480, SDL_WINDOW_ALWAYS_ON_TOP);
-a
+
     // Create a hardware accelerated mRenderer
     SDL_Renderer* renderer = SDL_CreateRenderer(window,null);
 
@@ -21,8 +21,14 @@ a
 //	ui.AddChild(new Panel("",10,5,180,15));
 	ui.AddChild(new Label("testing with some text",15,12));
 	// Chaining is supported
-	ui.AddChild(new Button("Button text",10,30,100,20))
-	  .AddChild(new ButtonToggle("Toggle text",10,50,true))
+	auto b1 = new Button("Button text",10,30,100,20);
+	b1.SetEventClickHandler( { writeln("button 1 clicked"); return true;} );
+	
+	auto bToggle = new ButtonToggle("Toggle text",10,50,true);
+	bToggle.SetEventClickHandler( { writeln("bToggle was toggled"); return true;} );
+
+	ui.AddChild(b1)
+	  .AddChild(bToggle)
 	  .AddChild(new ButtonToggle("Toggle text",10,70,false));
 	ui.AddChild(new Slider("Slider text",10,110,100,20,10.0f,0.0,100.0));
 

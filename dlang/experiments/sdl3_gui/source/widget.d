@@ -2,9 +2,20 @@
 import bindbc.sdl;
 import std.stdio,std.string,std.conv; // for toZString
 
+// Overridable event handler class
+class Event{
+
+}
+// alias for events
+//alias EventHandler = bool delegate(Event event);
+alias EventHandler = bool delegate();
+
 /// A bunch of state 
 struct DefaultState{
 	bool leftMouseDown = false;
+	bool rightMouseDown = false;
+	bool leftMouseDrag = false;
+	bool rightMouseDrag = false;
 
 	void Reset(){
 		this = DefaultState();
@@ -31,21 +42,50 @@ struct GuiState{
 	///           have the bounds there. Then I would not need to even call 'Update' anywhere.
 	void Update(){
 		// Reset the state at the start of every update
-		mState.Reset();
+		//mState.Reset();
 
 		SDL_GetMouseState(&mouseX, &mouseY);
 
 		// Listen for events
 		SDL_Event event;
 		SDL_PollEvent(&event);
+		if(event.type == SDL_EVENT_MOUSE_MOTION){
+			if(mState.leftMouseDown){
+				SDL_Log("left button dragged %d",event.button.button);
+				mState.leftMouseDrag = true;
+			}
+			if(mState.rightMouseDown){
+				SDL_Log("right button dragged %d",event.button.button);
+				mState.rightMouseDrag = true;
+			}
+		}
+		if(event.type == SDL_EVENT_MOUSE_BUTTON_UP){
+			if(mState.leftMouseDown){
+				SDL_Log("left button up %d",event.button.button);
+				mState.leftMouseDown =false;
+				mState.leftMouseDrag =false;
+			}
+			if(mState.rightMouseDown){
+				SDL_Log("right button up %d",event.button.button);
+				mState.rightMouseDown =false;
+				mState.rightMouseDrag =false;
+			}
+		}
 		if(event.type == SDL_EVENT_MOUSE_BUTTON_DOWN){
 			if(event.button.button == SDL_BUTTON_LEFT){
 				SDL_Log("left button clicked %d",event.button.button);
 				mState.leftMouseDown =true;
 			}
+			if(event.button.button == SDL_BUTTON_RIGHT){
+				SDL_Log("right button clicked %d",event.button.button);
+				mState.rightMouseDown =true;
+			}
 		}
-
 	}
+}
+
+struct Color{
+	ubyte r,g,b,a;
 }
 
 /// All UI elements have the following
@@ -53,8 +93,10 @@ abstract class Widget{
 	Widget mParent=null; 	// Keep track of the parent
 	Widget[] mChildren;		// Any children of the Widget
 	string mText="";		// Any text associated with the widget
-	SDL_FRect mRect;
-	ubyte r,g,b,a;
+	SDL_FRect mRect;		// The rectangle representing where to render the widget
+							// This also represents the 'clickable' surface
+	Color mColorForeground;
+	Color mColorBackground;
 
 	// Data associated with widgets
 	// TODO -- may have to abstract these elsewhere
@@ -63,6 +105,14 @@ abstract class Widget{
 	float mMinValue=0.0f;			//
 	float mMaxValue=0.0f;			//
 
+	// Events that a widget can handle
+	EventHandler mEventHandlerClick = null;
+	EventHandler mEventHandlerHover = null;
+	EventHandler mEventHandlerItemSelected = null;
+	EventHandler mEventHandlerValueChanged = null;
+	EventHandler mEventHandlerOnScrollChanged = null;
+
+	/// Add a child node
 	typeof(this) AddChild(Widget w){
 		this.mChildren ~= w;
 		w.mParent = this;
@@ -108,13 +158,28 @@ abstract class Widget{
 		this.mMaxValue = v;
 	}
 	final void SetStrokeColor(ubyte r, ubyte g, ubyte b, ubyte a){
-		this.r = r;
-		this.g = g;
-		this.b = b;
-		this.a = a;
+		this.mColorForeground.r = r;
+		this.mColorForeground.g = g;
+		this.mColorForeground.b = b;
+		this.mColorForeground.a = a;
 	}
 	final void SetOpacity(ubyte a){
-		this.a = a;
+		this.mColorForeground.a = a;
+	}
+	final void SetEventClickHandler(EventHandler handlerDelegate){
+		mEventHandlerClick = handlerDelegate;
+	}
+	final void SetEventHoverHandler(EventHandler handlerDelegate){
+		mEventHandlerHover = handlerDelegate;
+	}
+	final void SetEventItemSelectedHandler(EventHandler handlerDelegate){
+		mEventHandlerItemSelected = handlerDelegate;
+	}
+	final void SetEventValueChangedHandler(EventHandler handlerDelegate){
+		mEventHandlerValueChanged = handlerDelegate;
+	}
+	final void SetEventOnScrollHandler(EventHandler handlerDelegate){
+		mEventHandlerOnScrollChanged = handlerDelegate;
 	}
 
 	void Render(GuiState* guiState);
@@ -125,7 +190,8 @@ abstract class Widget{
 		writeln("Text: ",mText);
 		writeln("(x,y): (",mRect.x,",",mRect.y,")");
 		writeln("(w,h): (",mRect.w,",",mRect.h,")");
-		writeln("(r,g,b,a): (",r,",",g,",",b,",",a,")");
+		writeln("Foreground: (r,g,b,a): (",mColorForeground.r,",",mColorForeground.g,",",mColorForeground.b,",",mColorForeground.a,")");
+		writeln("Background: (r,g,b,a): (",mColorBackground.r,",",mColorBackground.g,",",mColorBackground.b,",",mColorBackground.a,")");
 		writeln("children: ",mChildren);
 	}
 }
@@ -177,21 +243,25 @@ class Button : Widget{
 	}
 	override void Render(GuiState* guiState){
 		SDL_FPoint mouse = SDL_FPoint(guiState.mouseX,guiState.mouseY);
+
 		if(SDL_PointInRectFloat(&mouse, &mRect)){
 			SDL_SetRenderDrawColor(guiState.mRenderer, 192,192,192,128);
 			// Handle the button press
 			if(guiState.mState.leftMouseDown){
 				SDL_SetRenderDrawColor(guiState.mRenderer, 164,164,164,128);
-				writeln("Button clicked");
+				if(mEventHandlerClick){
+					mEventHandlerClick();
+				}
+				guiState.mState.Reset(); // Handle only one click
 			}
 		}else{
-			SDL_SetRenderDrawColor(guiState.mRenderer, r,g,b,a);
+			SDL_SetRenderDrawColor(guiState.mRenderer, mColorForeground.r,mColorForeground.g,mColorForeground.b,mColorForeground.a);
 		}
 		SDL_RenderFillRect(guiState.mRenderer, &mRect);
 
 		// Draw the button text
 		if(mText.length >0){
-			SDL_SetRenderDrawColor(guiState.mRenderer, 255,255,255,a);
+			SDL_SetRenderDrawColor(guiState.mRenderer, 255,255,255,mColorForeground.a);
 			SDL_RenderDebugText(guiState.mRenderer, mRect.x, mRect.y, mText.toStringz);
 		}
 	}
@@ -211,15 +281,18 @@ class ButtonToggle : Widget{
 		// toggable button
 		SDL_FRect toggleRect = SDL_FRect(mRect.x,mRect.y,20,20);
 
-
 		if(SDL_PointInRectFloat(&mouse, &toggleRect)){
 			SDL_SetRenderDrawColor(guiState.mRenderer, 64,64,64,128);
 			// Toggle the checkmark if the left mouse is down
 			if(guiState.mState.leftMouseDown){
 				mChecked = !mChecked;	
+				if(mEventHandlerClick){
+					mEventHandlerClick();
+				}
+				guiState.mState.Reset(); // Handle only one click
 			}
 		}else{
-			SDL_SetRenderDrawColor(guiState.mRenderer, r,g,b,a);
+			SDL_SetRenderDrawColor(guiState.mRenderer, mColorForeground.r,mColorForeground.g,mColorForeground.b,mColorForeground.a);
 		}
 		SDL_RenderFillRect(guiState.mRenderer, &toggleRect);
 
@@ -231,7 +304,7 @@ class ButtonToggle : Widget{
 
 		// Draw the toggle button text
 		if(mText.length >0){
-			SDL_SetRenderDrawColor(guiState.mRenderer, 255,255,255,a);
+			SDL_SetRenderDrawColor(guiState.mRenderer,255,255,255,mColorForeground.a);
 			SDL_RenderDebugText(guiState.mRenderer, mRect.x+20, mRect.y, mText.toStringz);
 		}
 	}
@@ -280,13 +353,13 @@ class Slider: Widget{
 			float distanceAlongSlider = mouse.x - sliderRect.x;
 			mValue = distanceAlongSlider * pixelSliderRatio;
 		}
-	
+
 		//
 		SDL_RenderFillRect(guiState.mRenderer, &sliderRectSelect);
 
 		// Draw the toggle button text
 		if(mText.length >0){
-			SDL_SetRenderDrawColor(guiState.mRenderer, 0,0,0,a);
+			SDL_SetRenderDrawColor(guiState.mRenderer, 0,0,0,mColorForeground.a);
 			SDL_RenderDebugText(guiState.mRenderer, mRect.x, mRect.y-10, mText.toStringz);
 			SDL_SetRenderDrawColor(guiState.mRenderer, 255,255,255,255);
 			SDL_RenderDebugText(guiState.mRenderer, mRect.x, mRect.y, mValue.to!string.toStringz);
@@ -301,7 +374,7 @@ class Label : Widget{
 		SetStrokeColor(0,0,0,255);
 	}
 	override void Render(GuiState* guiState){
-		SDL_SetRenderDrawColor(guiState.mRenderer, r,g,b,a);
+		SDL_SetRenderDrawColor(guiState.mRenderer, mColorForeground.r,mColorForeground.g,mColorForeground.b,mColorForeground.a);
 		SDL_RenderDebugText(guiState.mRenderer, mRect.x, mRect.y, mText.toStringz);
 	}
 }
@@ -320,9 +393,9 @@ class Panel : Widget{
 		SDL_SetRenderDrawBlendMode(guiState.mRenderer, SDL_BLENDMODE_BLEND);
 
 		if(SDL_PointInRectFloat(&mouse, &mRect)){
-			SDL_SetRenderDrawColor(guiState.mRenderer, g,b,r,128);
+			SDL_SetRenderDrawColor(guiState.mRenderer, mColorForeground.r,mColorForeground.g,mColorForeground.b,128);
 		}else{
-			SDL_SetRenderDrawColor(guiState.mRenderer, r,g,b,a);
+			SDL_SetRenderDrawColor(guiState.mRenderer, mColorForeground.r,mColorForeground.g,mColorForeground.b,mColorForeground.a);
 		}
 		SDL_RenderFillRect(guiState.mRenderer, &mRect);
 		SDL_SetRenderDrawBlendMode(guiState.mRenderer, SDL_BLENDMODE_NONE);
@@ -357,9 +430,9 @@ class DropDown : Widget{
 		SDL_FPoint mouse = SDL_FPoint(guiState.mouseX,guiState.mouseY);
 
 		if(SDL_PointInRectFloat(&mouse, &mRect)){
-			SDL_SetRenderDrawColor(guiState.mRenderer, g,b,r,128);
+			SDL_SetRenderDrawColor(guiState.mRenderer, mColorForeground.r,mColorForeground.g,mColorForeground.b,128);
 		}else{
-			SDL_SetRenderDrawColor(guiState.mRenderer, r,g,b,a);
+			SDL_SetRenderDrawColor(guiState.mRenderer, mColorForeground.r,mColorForeground.g,mColorForeground.b,mColorForeground.a);
 		}
 		SDL_RenderFillRect(guiState.mRenderer, &mRect);
 		SDL_SetRenderDrawBlendMode(guiState.mRenderer, SDL_BLENDMODE_NONE);
@@ -446,14 +519,21 @@ class TreeView : Widget{
 			TreeItem front = tempbfs[0];
 			tempbfs = tempbfs[1 .. $]; // pop element
 			bfs ~= front;
-			// Append the children
+			// Append the children, but we 'prepend them'
 			if(front.mExpanded){
 				foreach(child ; front.mItems){
 					child.mDepth = front.mDepth+1;
-					tempbfs ~= child;
+					// prepend the node so that it will render in order
+					tempbfs = child ~ tempbfs;
+					//					tempbfs ~= child;
 				}	
 			}
 		}
+
+		// Repromote any 'child nodes in the 'tempbfs' to ensure they do not
+		// fall under expanded nodes
+		import std.algorithm;
+		//		bfs.sort!("a.mText < b.mText");
 
 		SDL_FRect r;
 		foreach(idx,elem; bfs){
@@ -483,6 +563,10 @@ class TreeView : Widget{
 				if(guiState.mState.leftMouseDown){
 					writeln("Clicked on:",elem.mText);
 					elem.mExpanded = !elem.mExpanded;
+					if(mEventHandlerClick){
+						mEventHandlerClick();
+					}
+					guiState.mState.Reset(); // Handle only one click
 				}
 			}
 			SDL_RenderDebugText(guiState.mRenderer, r.x, r.y, elem.mText.toStringz);
@@ -507,6 +591,7 @@ void DrawTitleBar(SDL_Renderer* renderer, string text, float x, float y, float w
 	SDL_SetRenderDrawColor(renderer, 255,255,255,255);
 	SDL_RenderDebugText(renderer, x, y, text.toStringz);
 }
+
 
 /*
    class Image: Widget{
