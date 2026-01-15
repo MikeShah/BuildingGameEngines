@@ -40,13 +40,16 @@ struct GuiState{
 	///      and mouse presses if they're not over the GUI.
 	/// 	 i.e. I could just call 'update' from within a 'UI' widget, and then
 	///           have the bounds there. Then I would not need to even call 'Update' anywhere.
-	void Update(){
+	SDL_Event Update(){
 		// Reset the state at the start of every update
 		//mState.Reset();
 
 		SDL_GetMouseState(&mouseX, &mouseY);
 
 		// Listen for events
+		// TODO: Need to consider if the event should be copied back
+		//		 to the event queue, so that the user application can otherwise
+		//		 handle the event.
 		SDL_Event event;
 		SDL_PollEvent(&event);
 		if(event.type == SDL_EVENT_MOUSE_MOTION){
@@ -81,6 +84,7 @@ struct GuiState{
 				mState.rightMouseDown =true;
 			}
 		}
+		return event;
 	}
 }
 
@@ -262,7 +266,7 @@ class Button : Widget{
 		// Draw the button text
 		if(mText.length >0){
 			SDL_SetRenderDrawColor(guiState.mRenderer, 255,255,255,mColorForeground.a);
-			SDL_RenderDebugText(guiState.mRenderer, mRect.x, mRect.y, mText.toStringz);
+			SDL_RenderDebugText(guiState.mRenderer, mRect.x+2, mRect.y+2, mText.toStringz);
 		}
 	}
 }
@@ -305,7 +309,7 @@ class ButtonToggle : Widget{
 		// Draw the toggle button text
 		if(mText.length >0){
 			SDL_SetRenderDrawColor(guiState.mRenderer,255,255,255,mColorForeground.a);
-			SDL_RenderDebugText(guiState.mRenderer, mRect.x+20, mRect.y, mText.toStringz);
+			SDL_RenderDebugText(guiState.mRenderer, mRect.x+22, mRect.y+4, mText.toStringz);
 		}
 	}
 }
@@ -318,7 +322,7 @@ class Slider: Widget{
 		SetValue(value);
 		SetMinValue(minValue);
 		SetMaxValue(maxValue);
-		assert(maxValue > minValue, "max value for slider is not greater than minimum value. This will cause an error when rendering the slider widget, please fix.");
+		assert(maxValue > minValue, "max value for slider is greater than minimum value. This will cause an error when rendering the slider widget, please fix.");
 
 		// Default stroke color
 		SetStrokeColor(0,0,0,255);
@@ -333,9 +337,15 @@ class Slider: Widget{
 		// Slider button
 		SDL_FRect sliderRect		= SDL_FRect(mRect.x,mRect.y+5,100,10);
 		SDL_FRect sliderRectSelect	= SDL_FRect(sliderOffset,mRect.y,10,20);
+		SDL_FRect sliderRectBackground = SDL_FRect(mRect.x,mRect.y,100,20);
+
+		SDL_SetRenderDrawBlendMode(guiState.mRenderer, SDL_BLENDMODE_BLEND);
+		SDL_SetRenderDrawColor(guiState.mRenderer, 32,32,32,64);
+		SDL_RenderFillRect(guiState.mRenderer, &sliderRectBackground);
 
 		SDL_SetRenderDrawColor(guiState.mRenderer, 0,0,0,255);
 		SDL_RenderFillRect(guiState.mRenderer, &sliderRect);
+		SDL_SetRenderDrawBlendMode(guiState.mRenderer, SDL_BLENDMODE_NONE);
 
 		// slider selection
 		// TODO
@@ -348,7 +358,7 @@ class Slider: Widget{
 		}
 
 		// Slider set value
-		if(SDL_PointInRectFloat(&mouse, &sliderRect) && guiState.mState.leftMouseDown){
+		if(SDL_PointInRectFloat(&mouse, &sliderRectBackground) && guiState.mState.leftMouseDown){
 			// Figure out where we clicked
 			float distanceAlongSlider = mouse.x - sliderRect.x;
 			mValue = distanceAlongSlider * pixelSliderRatio;
@@ -367,15 +377,21 @@ class Slider: Widget{
 	}
 }
 class Label : Widget{
-	this(string text,float x, float y){
+	this(string text,float x, float y, float w, float h){
 		SetText(text);
 		MovePosition(x,y);
+		SetSize(w,h);
 		// Default stroke color
 		SetStrokeColor(0,0,0,255);
 	}
 	override void Render(GuiState* guiState){
+		SDL_SetRenderDrawBlendMode(guiState.mRenderer, SDL_BLENDMODE_BLEND);
+		SDL_SetRenderDrawColor(guiState.mRenderer, 192,192,192,192);
+		SDL_RenderFillRect(guiState.mRenderer, &mRect);
+		SDL_SetRenderDrawBlendMode(guiState.mRenderer, SDL_BLENDMODE_NONE);
+
 		SDL_SetRenderDrawColor(guiState.mRenderer, mColorForeground.r,mColorForeground.g,mColorForeground.b,mColorForeground.a);
-		SDL_RenderDebugText(guiState.mRenderer, mRect.x, mRect.y, mText.toStringz);
+		SDL_RenderDebugText(guiState.mRenderer, mRect.x+2, mRect.y+2, mText.toStringz);
 	}
 }
 
@@ -409,6 +425,9 @@ class Panel : Widget{
 
 class DropDown : Widget{
 	string[] mElements;
+	bool mIsOpen=false; // Is the DropDown 'open'
+	int mLastIndexSelected = -1;	// No index selected
+	long mFirstRenderedElementIndex;
 
 	this(string text, float x, float y, float w, float h){
 		SetText(text);
@@ -429,33 +448,133 @@ class DropDown : Widget{
 
 		SDL_FPoint mouse = SDL_FPoint(guiState.mouseX,guiState.mouseY);
 
-		if(SDL_PointInRectFloat(&mouse, &mRect)){
-			SDL_SetRenderDrawColor(guiState.mRenderer, mColorForeground.r,mColorForeground.g,mColorForeground.b,128);
-		}else{
-			SDL_SetRenderDrawColor(guiState.mRenderer, mColorForeground.r,mColorForeground.g,mColorForeground.b,mColorForeground.a);
-		}
-		SDL_RenderFillRect(guiState.mRenderer, &mRect);
-		SDL_SetRenderDrawBlendMode(guiState.mRenderer, SDL_BLENDMODE_NONE);
+		// Clickable Range
+		SDL_FRect clickableRange = mRect;
+		clickableRange.h = mRect.h + 20;
+		
+		bool isHovered = SDL_PointInRectFloat(&mouse, &clickableRange);
 
-		// TODO Fix so that this stays 'shown' when hovered or clicked so that further
-		//      elements can then be selected.
-		// TODO Fix render 'ordering' of the elements -- perhaps in a seperate pass to figure
-		//      out how to get things to overlay properly?
-		if(SDL_PointInRectFloat(&mouse, &mRect)){
-			foreach(idx,elem; mElements){
-				SDL_FRect r = SDL_FRect(mRect.x,mRect.y+idx*20,mRect.w,mRect.h);
-				SDL_SetRenderDrawColor(guiState.mRenderer, 255,255,255,128);
-				SDL_RenderFillRect(guiState.mRenderer, &r);
-				SDL_SetRenderDrawColor(guiState.mRenderer, 0,0,0,255);
-				SDL_RenderRect(guiState.mRenderer, &r);
-				SDL_SetRenderDrawColor(guiState.mRenderer, 0,0,0,255);
-				SDL_RenderDebugText(guiState.mRenderer, r.x, r.y, elem.toStringz);
+		if(isHovered){
+			if(guiState.mState.leftMouseDown && !mIsOpen){
+				mIsOpen = !mIsOpen;
+				guiState.mState.Reset();
+				return;
 			}
 		}
 
+		// Render the last selected element below in the dropdown
+		SDL_FRect lastSelected = SDL_FRect(mRect.x,mRect.y+20,mRect.w,mRect.h);
+		SDL_SetRenderDrawColor(guiState.mRenderer, 255,255,255,128);
+		SDL_RenderFillRect(guiState.mRenderer, &lastSelected);
+		SDL_SetRenderDrawColor(guiState.mRenderer, 0,0,0,255);
+		SDL_RenderRect(guiState.mRenderer, &lastSelected);
+		SDL_SetRenderDrawColor(guiState.mRenderer, 0,0,0,255);
+		if(!mIsOpen){
+			if(mLastIndexSelected != -1){
+				SDL_RenderDebugText(guiState.mRenderer, lastSelected.x+2, lastSelected.y+2, mElements[mLastIndexSelected].toStringz);
+			}else if(mLastIndexSelected==-1){
+				SDL_RenderDebugText(guiState.mRenderer, lastSelected.x+lastSelected.w/2, lastSelected.y+2, "-".toStringz);
+			}
+		}
+
+		// Stays 'shown' when hovered or clicked so that further elements can then be selected.
+		// TODO Fix render 'ordering' of the elements -- perhaps in a seperate pass to figure
+		//      out how to get things to overlay properly?
+		long widthOfScrollbar=10;
+		if(mIsOpen){
+			foreach(idx,elem; mElements[mFirstRenderedElementIndex..$]){
+				// Limit ourselves to only displaying 3 items
+				if(idx>3){
+					break;
+				}
+
+				SDL_FRect r = SDL_FRect(mRect.x,mRect.y+(idx+1)*20,mRect.w-widthOfScrollbar,mRect.h);
+				// If mouse is in the selected element
+				if(SDL_PointInRectFloat(&mouse, &r)){
+					SDL_SetRenderDrawColor(guiState.mRenderer, 255,255,255,128);
+					SDL_RenderFillRect(guiState.mRenderer, &r);
+					// Select the element 
+					if(guiState.mState.leftMouseDown){
+						mIsOpen = false;
+						// Execute the event handler for the selected item.
+						if(mEventHandlerItemSelected){
+							writeln("Detected a left-click on element:",elem);
+							mEventHandlerItemSelected();
+							mLastIndexSelected = cast(int)idx; // update index of selected element
+						}
+						guiState.mState.Reset();
+					}
+				}else{
+					SDL_SetRenderDrawColor(guiState.mRenderer, 192,192,192,255);
+					SDL_RenderFillRect(guiState.mRenderer, &r);
+				}
+				SDL_SetRenderDrawColor(guiState.mRenderer, 0,0,0,255);
+				SDL_RenderRect(guiState.mRenderer, &r);
+				SDL_SetRenderDrawColor(guiState.mRenderer, 0,0,0,255);
+				SDL_RenderDebugText(guiState.mRenderer, r.x+2, r.y+2, elem.toStringz);
+			}
+
+			// Draw a scrollbar on the right	
+			// tempRect is a 'hack' to make the 'size' of the total rectangle
+			SDL_FRect tempRect = SDL_FRect(mRect.x,mRect.y+mRect.h,mRect.w,mRect.h*3);	// rectangle + 4 elements
+			SDL_FRect backgroundBar = SDL_FRect (tempRect.x+tempRect.w-10,tempRect.y,10,tempRect.h);
+			SDL_FRect topBar 		= SDL_FRect (tempRect.x+tempRect.w-10,tempRect.y,10,10);
+			SDL_FRect bottomBar 	= SDL_FRect (tempRect.x+tempRect.w-10,tempRect.y+tempRect.h-10,10,10);
+
+			SDL_SetRenderDrawColor(guiState.mRenderer, 192,192,192,255);
+			SDL_RenderFillRect(guiState.mRenderer,&backgroundBar);
+
+			SDL_SetRenderDrawColor(guiState.mRenderer, 32,32,32,255);
+			SDL_RenderFillRect(guiState.mRenderer,&topBar);
+			SDL_RenderFillRect(guiState.mRenderer,&bottomBar);
+
+			if(SDL_PointInRectFloat(&mouse, &topBar) && guiState.mState.leftMouseDown){
+				mFirstRenderedElementIndex--;
+				if(mFirstRenderedElementIndex<0){
+					mFirstRenderedElementIndex=0;
+				}
+				guiState.mState.Reset(); // Handle scroll up
+			}
+			else if(SDL_PointInRectFloat(&mouse, &bottomBar) && guiState.mState.leftMouseDown){
+				mFirstRenderedElementIndex++;
+				if(mFirstRenderedElementIndex>mElements.length-1){
+					mFirstRenderedElementIndex=mElements.length-1;
+				}
+				guiState.mState.Reset(); // Handle scroll down 
+			}else if(SDL_PointInRectFloat(&mouse, &backgroundBar)){
+				// Render a line to indicate where you are
+				SDL_SetRenderDrawColor(guiState.mRenderer, 0,0,0,255);
+				SDL_RenderLine(guiState.mRenderer, backgroundBar.x, mouse.y, backgroundBar.x+backgroundBar.w,mouse.y);	
+				if(guiState.mState.leftMouseDown | guiState.mState.leftMouseDrag){
+					// Calculate roughly where to position.
+
+					float percentageHeight = ((mouse.y -backgroundBar.y) / backgroundBar.h) * mElements.length;
+					writeln("percentageHeight = ",percentageHeight);
+					mFirstRenderedElementIndex = cast(long)percentageHeight;
+
+	//				guiState.mState.Reset(); // Handle scroll down 
+				}
+			}
+		}
+
+		// If mouse clicked outside of expanded dropdown, then close it.
+		SDL_FRect maxClickableRect = SDL_FRect(mRect.x,mRect.y,mRect.w,mRect.h);
+		// The '+1' is for the 'last selected element'
+		foreach(idx; 0 .. mElements.length + 1){
+			maxClickableRect.h += 20; // TODO: '20' is arbitrary
+		}
+		
+		// Close dropdown
+		// Don't reset gui state, because we may be doing something else since we are
+		// outside of dropdown.
+		if(!SDL_PointInRectFloat(&mouse, &maxClickableRect) && guiState.mState.leftMouseDown){
+			mIsOpen = false;
+		}
+			
+
 		// Title bar
 		if(mText.length >0){
-			DrawTitleBar(guiState.mRenderer, mText, mRect.x, mRect.y-12, mRect.w, 12);
+			DrawTitleBar(guiState.mRenderer, mText, mRect.x, mRect.y,mRect.w, mRect.h);
 		}
 	}
 }
@@ -480,6 +599,7 @@ class TreeItem{
 
 class TreeView : Widget{
 	TreeItem mRoot;
+	long mFirstRenderedElementIndex=0;
 
 	this(string text, float x, float y, float w, float h){
 		SetText(text);
@@ -535,13 +655,19 @@ class TreeView : Widget{
 		import std.algorithm;
 		//		bfs.sort!("a.mText < b.mText");
 
+		int elementRenderHeight = 15;
+		int scrollBarWidth = 10;
 		SDL_FRect r;
-		foreach(idx,elem; bfs){
+		foreach(idx,elem; bfs[mFirstRenderedElementIndex..$]){
 			SDL_SetRenderDrawColor(guiState.mRenderer, 0,0,0,255);
 
 			float xIndent = 2+mRect.x+elem.mDepth*10; 
-			float yIndent = 2+mRect.y+idx*15;
-			r = SDL_FRect(xIndent,yIndent,mRect.w - xIndent,15);
+			float yIndent = 2+mRect.y+idx*elementRenderHeight;
+			r = SDL_FRect(xIndent,yIndent,mRect.w - elem.mDepth*10 - scrollBarWidth, elementRenderHeight);
+			// Terminate rendering of child elements if they go out of bounds.
+			if(yIndent > mRect.y+mRect.h){
+				break;
+			}
 			// Draw a plus sign next to nodes that can be expanded
 			if(elem.mExpanded == false && elem.mItems.length > 0){
 				SDL_RenderLine(guiState.mRenderer, xIndent-9, yIndent+3, xIndent-2,yIndent+3);	
@@ -572,6 +698,46 @@ class TreeView : Widget{
 			SDL_RenderDebugText(guiState.mRenderer, r.x, r.y, elem.mText.toStringz);
 		}
 
+		// Draw a scrollbar on the right	
+		SDL_FRect backgroundBar = SDL_FRect (mRect.x+mRect.w-scrollBarWidth,mRect.y,10,mRect.h);
+		SDL_FRect topBar 		= SDL_FRect (mRect.x+mRect.w-scrollBarWidth,mRect.y,10,10);
+		SDL_FRect bottomBar 	= SDL_FRect (mRect.x+mRect.w-scrollBarWidth,mRect.y+mRect.h-10,10,10);
+
+		SDL_SetRenderDrawColor(guiState.mRenderer, 192,192,192,255);
+		SDL_RenderRect(guiState.mRenderer,&backgroundBar);
+
+		SDL_SetRenderDrawColor(guiState.mRenderer, 32,32,32,255);
+		SDL_RenderFillRect(guiState.mRenderer,&topBar);
+		SDL_RenderFillRect(guiState.mRenderer,&bottomBar);
+
+		if(SDL_PointInRectFloat(&mouse, &topBar) && guiState.mState.leftMouseDown){
+			mFirstRenderedElementIndex--;
+			if(mFirstRenderedElementIndex<0){
+				mFirstRenderedElementIndex=0;
+			}
+			guiState.mState.Reset(); // Handle scroll up
+		}
+		else if(SDL_PointInRectFloat(&mouse, &bottomBar) && guiState.mState.leftMouseDown){
+			mFirstRenderedElementIndex++;
+			if(mFirstRenderedElementIndex>bfs.length-1){
+				mFirstRenderedElementIndex=bfs.length-1;
+			}
+			guiState.mState.Reset(); // Handle scroll down 
+		}else if(SDL_PointInRectFloat(&mouse, &backgroundBar)){
+			// Render a line to indicate where you are
+			SDL_SetRenderDrawColor(guiState.mRenderer, 0,0,0,255);
+			SDL_RenderLine(guiState.mRenderer, backgroundBar.x, mouse.y, backgroundBar.x+backgroundBar.w,mouse.y);	
+			if(guiState.mState.leftMouseDown | guiState.mState.leftMouseDrag){
+				// Calculate roughly where to position.
+
+				float percentageHeight = ((mouse.y -backgroundBar.y) / backgroundBar.h) * bfs.length;
+				writeln("percentageHeight = ",percentageHeight);
+				mFirstRenderedElementIndex = cast(long)percentageHeight;
+
+//				guiState.mState.Reset(); // Handle scroll down 
+			}
+		}
+
 		// Title bar
 		if(mText.length >0){
 			DrawTitleBar(guiState.mRenderer, mText, mRect.x, mRect.y-12, mRect.w, 12);
@@ -589,7 +755,7 @@ void DrawTitleBar(SDL_Renderer* renderer, string text, float x, float y, float w
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 
 	SDL_SetRenderDrawColor(renderer, 255,255,255,255);
-	SDL_RenderDebugText(renderer, x, y, text.toStringz);
+	SDL_RenderDebugText(renderer, x+2, y+2, text.toStringz);
 }
 
 
