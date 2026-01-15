@@ -21,6 +21,32 @@ struct DefaultState{
 	}
 }
 
+// A global function that registers the names of every constructed widget
+// Note that if the 'widget' name exists already, this will cause an error.
+struct Globals{
+  static Widget[string] sWidgetNames;
+
+  static void RegisterName(string name, Widget w){
+    if(name in sWidgetNames){
+      assert(0,"Error, name '"~name~"' is already used for widget");
+    }
+    sWidgetNames[name] = w;
+  }
+
+  static Widget GetWidgetByName(string name){
+    if(name in sWidgetNames){
+      return sWidgetNames[name];
+    }
+    return null;
+  }
+
+  static void PrintWidgets(){
+    writeln(sWidgetNames);
+  }
+
+}
+
+
 /// Holds global Graphical User Interface State
 /// NOTE: TODO This could also hold things like 'commands' or
 ///       perhaps other widget events
@@ -134,6 +160,7 @@ abstract class Widget{
 	}
   final void SetUniqueWidgetName(string name){
     mWidgetName = name;
+    Globals.RegisterName(name,this);
   }
 	/// Set the size of the widge in terms of pixels
 	final void SetSize(float w, float h){

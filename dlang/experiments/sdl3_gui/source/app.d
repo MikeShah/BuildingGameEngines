@@ -1,19 +1,19 @@
 /// TODO list
 // [ ] - Figure out how to 'tie' variables to widgets to get values back
-// [ ] - Potentially give every created 'widget' a text string name so it can be looked up, in case
 //		 it is created on the fly.
 // [ ] - Create an 'input box'  widget 
 // [ ] - Handle 'dragging' of panel or other widgets
 // [ ] - Think about a good way to document what is available for each widget
 // [ ] - Add some sort of 'style' type to make style more consistent and uniform
+// [ ] - Handle window resizing and mouse position (set logical render presentation)
+// [ ] - Add some getter functions to Treeview and dropdown for retrieving element index and text
 // [x] - Add a little 'dropdown' visual for the dropdown box.
 // [x] - Consider if 'dropdown' should store last selected item
 // [x] - Handle scroll for Treeview 
 // [x] - Handle scroll for dropdown
-// [ ] - Add some getter functions to Treeview and dropdown for retrieving element index and text
-// [ ] - Do some performance tests
+// [x] - Add a FPS counter on demo to monitor performance
 // [x] - Have gui.Update() return the SDL_Event so we don't lose it in the main application.
-// [ ] - Handle window resizing and mouse position (set logical render presentation)
+// [x] - Potentially give every created 'widget' a text string name so it can be looked up and returned/modified
 
 
 /// @file: app.d
@@ -24,19 +24,20 @@ import widget;
 
 // All the code needed to setup a gui
 void demo_gui_setup(Widget ui){
-//	Panel p1 = new Panel("",0,0,200,25);
-//	p1.SetParent(ui);
-
+  // Create a 'Panel' to our 'ui' and then add a lable
 	ui.AddChild(new Panel("panel1","Panel Text",0,0,200,400));
-//	ui.AddChild(new Panel("",10,5,180,15));
 	ui.AddChild(new Label("label1","testing with some text",10,12,180,16));
-	// Chaining is supported
+
+  // Let's now setup some other widgets
+  // Button
 	auto b1 = new Button("button1","Button text",10,30,100,20);
 	b1.SetEventClickHandler( { writeln("button 1 clicked"); return true;} );
-	
+	// Toggable button
 	auto bToggle = new ButtonToggle("buttontoggle3","Toggle text1",10,51,true);
 	bToggle.SetEventClickHandler( { writeln("bToggle was toggled"); return true;} );
 
+  // The 'AddChild' member returns a type of 'widget', so we can use
+  // 'chaining' to add multiple buttons to our user interface.
 	ui.AddChild(b1)
 	  .AddChild(bToggle)
 	  .AddChild(new ButtonToggle("buttontoggle2","Toggle text2",10,72,false));
@@ -50,13 +51,14 @@ void demo_gui_setup(Widget ui){
 	d1.AddElement("test4");
 	d1.AddElement("test5");
 	ui.AddChild(d1);
-//	ui.AddChild(new DropDown("Dropdown",10,130,100,20));
-	TreeView t1 = new TreeView("treevie1","Tree View",10,240,180,120);
+  //	ui.AddChild(new DropDown("dropdown1","Dropdown",10,130,100,20));
+	
+  TreeView t1 = new TreeView("treevie1","Tree View",10,240,180,120);
 	TreeItem root =  new TreeItem("Root");
 	t1.mRoot = root;
 	root.AddChild(new TreeItem("tree item 1"))
-		.AddChild(new TreeItem("tree item 2"))
-		.AddChild(new TreeItem("tree item 3"));
+  		.AddChild(new TreeItem("tree item 2"))
+	  	.AddChild(new TreeItem("tree item 3"));
 
 	TreeItem secondLayer = new TreeItem("has children");
 	root.AddChild(secondLayer);
@@ -73,6 +75,10 @@ void demo_gui_setup(Widget ui){
 	ui.AddChild(t1);
 
 	ui.MovePosition(20,30);
+
+
+  // Globals
+  Globals.PrintWidgets();
 }
 
 void main()
