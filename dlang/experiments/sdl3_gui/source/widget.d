@@ -144,6 +144,18 @@ abstract class Widget{
 		return this;
 	}
 
+  // Adds a child node from an existing node, by searching for the node name
+  // in the 'Globals' registry, and then adding that widget
+  typeof(this) AddChildByName(string name){
+    if(Widget w = Globals.GetWidgetByName(name)){
+      this.mChildren ~= w;
+      w.mParent = this;
+      return this;
+    }
+    assert(0,"Could not add child widget, it does not exist: "~name);
+
+  }
+
 	/// Sets the parent widget
 	/// Makes this item a child of the widget.
 	/// TODO: Check that child is not already part mChildren collection
@@ -483,8 +495,9 @@ class DropDown : Widget{
 
 	// TODO: Change this 
 	// 
-	void AddElement(string temp){
+	typeof(this) AddElement(string temp){
 		mElements ~= temp;
+    return this;
 	}
 
 	override void Render(GuiState* guiState){

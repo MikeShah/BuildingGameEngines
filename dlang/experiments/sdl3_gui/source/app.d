@@ -38,7 +38,7 @@ void demo_gui_setup(Widget ui){
 
   // The 'AddChild' member returns a type of 'widget', so we can use
   // 'chaining' to add multiple buttons to our user interface.
-	ui.AddChild(b1)
+	ui.AddChildByName("button1") // Widgets can also be added 'by name' of the string of the widget if you lose the objects scope. It must exist however.
 	  .AddChild(bToggle)
 	  .AddChild(new ButtonToggle("buttontoggle2","Toggle text2",10,72,false));
 	ui.AddChild(new Slider("slider1","Slider text",10,110,100,20,10.0f,0.0,100.0));
@@ -48,12 +48,12 @@ void demo_gui_setup(Widget ui){
 	d1.AddElement("test1");
 	d1.AddElement("test2");
 	d1.AddElement("test3");
-	d1.AddElement("test4");
-	d1.AddElement("test5");
+	d1.AddElement("test4").AddElement("test5").AddElement("test6");
 	ui.AddChild(d1);
   //	ui.AddChild(new DropDown("dropdown1","Dropdown",10,130,100,20));
 	
-  TreeView t1 = new TreeView("treevie1","Tree View",10,240,180,120);
+  TreeView t1 = new TreeView("treeview1","Tree View",10,240,180,120);
+  // Create a 'root' item at the top of the treeview
 	TreeItem root =  new TreeItem("Root");
 	t1.mRoot = root;
 	root.AddChild(new TreeItem("tree item 1"))
@@ -73,7 +73,6 @@ void demo_gui_setup(Widget ui){
 	root.AddChild(nested1);
 
 	ui.AddChild(t1);
-
 	ui.MovePosition(20,30);
 
 
