@@ -4,7 +4,6 @@ import std.stdio,std.string,std.conv; // for toZString
 
 // Overridable event handler class
 class Event{
-
 }
 // alias for events
 //alias EventHandler = bool delegate(Event event);
@@ -94,6 +93,7 @@ struct Color{
 
 /// All UI elements have the following
 abstract class Widget{
+  string mWidgetName;   // A unique Id for the widget
 	Widget mParent=null; 	// Keep track of the parent
 	Widget[] mChildren;		// Any children of the Widget
 	string mText="";		// Any text associated with the widget
@@ -102,12 +102,6 @@ abstract class Widget{
 	Color mColorForeground;
 	Color mColorBackground;
 
-	// Data associated with widgets
-	// TODO -- may have to abstract these elsewhere
-	bool mChecked=false;		// for toggable things. TODO Consider if this should be 'state' later?
-	float mValue=0.0f;			//
-	float mMinValue=0.0f;			//
-	float mMaxValue=0.0f;			//
 
 	// Events that a widget can handle
 	EventHandler mEventHandlerClick = null;
@@ -138,6 +132,9 @@ abstract class Widget{
 		mRect.x = x;
 		mRect.y = y;
 	}
+  final void SetUniqueWidgetName(string name){
+    mWidgetName = name;
+  }
 	/// Set the size of the widge in terms of pixels
 	final void SetSize(float w, float h){
 		mRect.w = w;
@@ -148,18 +145,6 @@ abstract class Widget{
 	///       perhaps in the future. TODO
 	final void SetText(string text){
 		this.mText = text;
-	}
-	final void SetChecked(bool checked){
-		this.mChecked = checked;
-	}
-	final void SetValue(float v){
-		this.mValue = v;
-	}
-	final void SetMinValue(float v){
-		this.mMinValue = v;
-	}
-	final void SetMaxValue(float v){
-		this.mMaxValue = v;
 	}
 	final void SetStrokeColor(ubyte r, ubyte g, ubyte b, ubyte a){
 		this.mColorForeground.r = r;
@@ -206,9 +191,14 @@ class UI : Widget{
 	GuiState* mGuiState;
 
 	// Which GUI state we register events from
-	this(GuiState* guiState){
+	this(string name, GuiState* guiState){
+    SetUniqueWidgetName(name);
 		mGuiState = guiState;
 	}
+
+  GuiState* GetGUIStatePtr(){
+    return mGuiState;
+  }
 
 	/// Sets the guiState and then calls render
 	override void Render(GuiState* guiState){
@@ -238,7 +228,8 @@ class UI : Widget{
 }
 
 class Button : Widget{
-	this(string text,float x, float y, float w, float h){
+	this(string name, string text,float x, float y, float w, float h){
+    SetUniqueWidgetName(name);
 		SetText(text);
 		MovePosition(x,y);
 		SetSize(w,h);
@@ -272,12 +263,17 @@ class Button : Widget{
 }
 
 class ButtonToggle : Widget{
-	this(string text,float x, float y, bool checked){
+	bool mChecked=false;		// for toggable things. TODO Consider if this should be 'state' later?
+	this(string name, string text,float x, float y, bool checked){
+    SetUniqueWidgetName(name);
 		SetText(text);
 		MovePosition(x,y);
 		SetChecked(checked);
 		// Default stroke color
 		SetStrokeColor(0,0,0,255);
+	}
+	final void SetChecked(bool checked){
+		this.mChecked = checked;
 	}
 	override void Render(GuiState* guiState){
 		SDL_FPoint mouse = SDL_FPoint(guiState.mouseX,guiState.mouseY);
@@ -315,7 +311,14 @@ class ButtonToggle : Widget{
 }
 
 class Slider: Widget{
-	this(string text,float x, float y,float w, float h, float value, float minValue, float maxValue){
+	// Data associated with widgets
+	// TODO -- may have to abstract these elsewhere
+	float mValue=0.0f;			//
+	float mMinValue=0.0f;			//
+	float mMaxValue=0.0f;			//
+
+	this(string name, string text,float x, float y,float w, float h, float value, float minValue, float maxValue){
+    SetUniqueWidgetName(name);
 		SetText(text);
 		MovePosition(x,y);
 		SetSize(w,h);
@@ -327,6 +330,17 @@ class Slider: Widget{
 		// Default stroke color
 		SetStrokeColor(0,0,0,255);
 	}
+
+	final void SetValue(float v){
+		this.mValue = v;
+	}
+	final void SetMinValue(float v){
+		this.mMinValue = v;
+	}
+	final void SetMaxValue(float v){
+		this.mMaxValue = v;
+	}
+
 	override void Render(GuiState* guiState){
 		SDL_FPoint mouse = SDL_FPoint(guiState.mouseX,guiState.mouseY);
 
@@ -377,7 +391,8 @@ class Slider: Widget{
 	}
 }
 class Label : Widget{
-	this(string text,float x, float y, float w, float h){
+	this(string name, string text,float x, float y, float w, float h){
+    SetUniqueWidgetName(name);
 		SetText(text);
 		MovePosition(x,y);
 		SetSize(w,h);
@@ -396,7 +411,8 @@ class Label : Widget{
 }
 
 class Panel : Widget{
-	this(string text, float x, float y, float w, float h){
+	this(string name, string text, float x, float y, float w, float h){
+    SetUniqueWidgetName(name);
 		SetText(text);
 		MovePosition(x,y);
 		SetSize(w,h);
@@ -429,7 +445,8 @@ class DropDown : Widget{
 	int mLastIndexSelected = -1;	// No index selected
 	long mFirstRenderedElementIndex;
 
-	this(string text, float x, float y, float w, float h){
+	this(string name, string text, float x, float y, float w, float h){
+    SetUniqueWidgetName(name);
 		SetText(text);
 		MovePosition(x,y);
 		SetSize(w,h);
@@ -601,7 +618,8 @@ class TreeView : Widget{
 	TreeItem mRoot;
 	long mFirstRenderedElementIndex=0;
 
-	this(string text, float x, float y, float w, float h){
+	this(string name, string text, float x, float y, float w, float h){
+    SetUniqueWidgetName(name);
 		SetText(text);
 		MovePosition(x,y);
 		SetSize(w,h);
