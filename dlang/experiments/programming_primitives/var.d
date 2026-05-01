@@ -25,6 +25,12 @@ enum Type{
   STRING
 };
 
+enum header = "enum Type{";
+enum body_  = "INT,STRING";
+enum footer = "};";
+
+
+
 /// Example showing that we can create data at compile-time anywhere.
 static foreach(a ; [1,2,3]){
   mixin("int ddd"~a.to!string~";");
@@ -85,7 +91,7 @@ struct RunTimeStruct{
 
 void main(){
   /// Demonstration of creating a 'var type';
-  Var myVar = Var(Type.INT, "intField");
+  Var myVar = Var(Type.INT, "myInteger");
 
   myVar = 7;
   myVar.mData.i = 7; // Equivalent to above
