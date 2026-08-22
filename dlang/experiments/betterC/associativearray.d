@@ -19,20 +19,52 @@ struct ExampleType{
 	bool opEquals(const typeof(this) rhs) const{
 		return true; 
 	}
+	string toString(){
+		return "TODO";
+	}
 }
 
 /// Associtative Arrays are otherwise known as 'dictionaries'.
 /// Associtive arrays are unordered, and store unique key/value pairs.
 /// The 'Key' must be a type that has a 
-struct AssociativeArray(Key,Value){
+///
+/// Note: The 'KeyHashFunc' can be overriden to otherwise use 'toHash()' o
+///	  or something else. For now, it uses a simple built-in hash
+///	  function that is 'good enough' but not necessarily 'secure'
+struct AssociativeArray(Key,Value,alias KeyHashFunc=null){
 	size_t 	mSize;		// Number of 'keys' that have been added.
 	size_t 	mCapacity;	// Capacity for the hashtable (i.e. the 'table size')
 	bool	mOwns;		// Internally determine if we 'own' the memory.
-				// Since in D associative arrays are 'reference types'
-				// need to think about this when 'copies' are made.
+	// TODO:
+	//	Internally keep track of number of collisions.
+	//	Need to consider if this is a 'debug' feature or can
+	//   	be turned off.
+	size_t mCollisionCount =0;
 
-	Value* mData;		// The values that we index into.
-	bool*  mOccupied;	// Table of values telling us if a slot is occupied.
+
+	// Helper function for hashing of keys that all keys can use
+	size_t SimpleHash(Key k){
+		size_t pos;
+		static if(isIntegral!Key){
+			pos = k % mCapacity;
+		}else{
+			//TODO: Look at std.digest
+			import std.digest.md;
+	//		pos = digest!MD5(k). % mCapacity;
+			pos =0;
+		}
+		return pos;
+	}
+
+	// Internal struct of key/value pairs
+	struct KeyValue(Key, Value){
+		Key key;
+		Value value;
+	}
+	// Alias for the key value pair
+	alias kv = KeyValue!(Key,Value);
+
+	kv** mData;	// The values that we index into.
 
 	invariant(){
 		// TODO:
@@ -47,12 +79,7 @@ struct AssociativeArray(Key,Value){
 	this(size_t initialCapacity){
 		mSize       	= 0;
 		mCapacity   	= initialCapacity;
-		mData       	= cast(Value*)malloc(Value.sizeof*mCapacity);
-		mOccupied	= cast(bool*)malloc(bool.sizeof*mCapacity);
-		for(size_t i=0; i < mCapacity; i++){
-			mOccupied[i] = false;
-		}
-		
+		mData       	= cast(kv**)malloc(kv.sizeof*mCapacity);
 		mOwns 		= true;
 	}
 
@@ -65,9 +92,12 @@ struct AssociativeArray(Key,Value){
 		printf("Destructor called\n");
 
 		if(mData !is null){
-			printf("SHOULD NOT PRINT\n");
+			for(int i=0; i < mCapacity; i++){
+				if(mData[i] !is null){
+					free(mData[i]);
+				}
+			}
 			free(mData);
-			free(mOccupied);
 			mData = null;
 		}
 		mSize 	  = size_t.init;
@@ -77,70 +107,66 @@ struct AssociativeArray(Key,Value){
 	// Copy constructor
 	// Note: Without this, we get in trouble for things, like
 	//       even the iterator will accidently free our memory!
-	this(ref return scope inout typeof(this) rhs){
+	this(ref typeof(this) rhs){
 		printf("Copy constructor invoked\n"); 
 		// Avoid copy  
 		if(this == rhs){
 			return;
 		}
 
-		Value* 	newdata = cast(Value*)malloc(Value.sizeof*rhs.mCapacity);
+		kv** 	newdata = cast(kv**)malloc(kv.sizeof*rhs.mCapacity);
 		for(size_t i=0; i < rhs.mCapacity; i++){
 			newdata[i] = rhs.mData[i];
-		}
-		bool* 	occupied= cast(bool*)malloc(bool.sizeof*rhs.mCapacity);
-		for(size_t i=0; i < rhs.mCapacity; i++){
-			occupied[i] = rhs.mOccupied[i];
 		}
 		mData 		= newdata;
 		mSize 		= rhs.mSize;
 		mCapacity 	= rhs.mCapacity;
-		mOccupied	= occupied;
 		mOwns 		= true;	
-		printf("A copy was made\n");
 	}
 	
 	/// Return the value given a key
+	/// TODO: Need to check return type
+	/// TODO: Consider just calling 'get' here.
 	Value opIndex()(Key k){ 
-		static if(isIntegral!Key){
-			size_t pos = k % mCapacity;
-		}else{
-			size_t pos = k.toHash() % mCapacity;
-		}
+		size_t pos = SimpleHash(k) % mCapacity;
 //		assert(pos < mCapacity, "accessing memory outside of capacity");
 		// TODO:
-		mOccupied[pos] = true;
 		return mData[pos];
 	}
 
-	ref Value get(Key k){
-		static if(isIntegral!Key){
-			size_t pos = k % mCapacity;
-		}else{
-			size_t pos = k.toHash() % mCapacity;
-		}
+	ref kv* get(Key k){
+		size_t pos = SimpleHash(k) % mCapacity;
 //		assert(pos < mCapacity, "accessing memory outside of capacity");
 		// TODO:
 		return mData[pos];
 	}
-	Value put(Key k, Value v){
-		printf("called put\n");
-		static if(isIntegral!Key){
-			printf("integral type\n");
-			printf("key is %d\n",k);
-			printf("mCapacity is %d\n",mCapacity);
-			size_t pos = k % mCapacity;
-		}else{
-			printf("non-integral type\n");
-			size_t pos = k.toHash() % mCapacity;
-		}
+	/// TODO: Need to check return type
+	kv* put(Key k, Value v){
+		kv* kv = cast(kv*)malloc(kv.sizeof);
+		kv.key = k;
+		kv.value = v;
+		
+		size_t pos = SimpleHash(k) % mCapacity;
 //		assert(pos < mCapacity, "accessing memory outside of capacity");
 		// TODO:
+		if(mData[pos] !is null){
+			ulong nextSpot=pos;
+			// Try next spots
+			// TODO: Need to 'wrap around'
+			while(nextSpot < mCapacity){
+				if(mData[nextSpot] is null){
+					pos = nextSpot;
+					break;
+				}else{
+					nextSpot++;
+					mCollisionCount++;
+				}
+			}
+		}
 
 		// Add the element
-		printf("adding at pos %d\n",pos);
-		mData[pos] = v;
-		mOccupied[pos] = true;
+		printf("adding at pos %lu\n",pos);
+		mData[pos] = kv;
 		mSize++;
 		return mData[pos];
 	}
@@ -158,14 +184,47 @@ struct AssociativeArray(Key,Value){
 
 	/// Returns a pointer to the raw table data.
 	/// The pointer cannot be changed otherwise
-	const(Value*) data() const{
+	const(kv**) data() const{
 		return this.mData;
 	}
 
+	/// TODO: Put in a buffer instead of a 'printf'
+	/// TODO: Rename this function to 'print' or something like that.
+	string toString(){
+		printf("kv: [");
+		for(int i=0; i < mCapacity; i++){
+			if(mData[i] !is null ){
+				// Print out key
+				static if(isIntegral!(Key)){
+					printf("%d:",mData[i].key);
+				}else if(is(Key==string)){
+					//printf("%s:",mData[i].key);
+				}
+				else{
+					//printf("%s:",mData[i].key.toString());
+				}
+				// print out value
+				static if(isIntegral!(Value)){
+					printf("%d",mData[i].value);
+				}else if(is(Value==string)){
+					printf("%s:",mData[i].value);
+				}else{
+					printf("%s",mData[i].value.toString());
+				}
+				// Handle printing out of commas
+				if(i<mCapacity-1 && (mData[i+1] !is null)){
+					printf(",");
+				}
+			}
+		}	
+		printf("]\n");
+		return "";
+	}
+
 	// ============ Iterator ========
-	size_t nextKey=0;
+	int nextKey=0;
 	size_t totalKeysIterated=0;
-	Value front(){
+	kv* front(){
 		++totalKeysIterated;
 		return mData[nextKey];
 	}
@@ -173,15 +232,13 @@ struct AssociativeArray(Key,Value){
 		printf("In popFront\n");
 		// Move iterator to the 'nextKey' free slot in the table.
 		for(size_t i=nextKey; nextKey < mCapacity; i++){
-			printf("mOccupied[%d]\n",i);
-			if(mOccupied[i]==false){
+			if(mData[i] is null){
 				nextKey++;
 			}else{
 				break;
 			}
 		}
 		printf("nextKey is: %d\n",nextKey);
-//		nextKey++;
 	}
 	bool empty() const{
 		return totalKeysIterated==mSize;
@@ -191,24 +248,32 @@ struct AssociativeArray(Key,Value){
 
 
 unittest{
-	printf("===start constructor test====\n");
+	printf("=== Basic AA test ====\n");
 	auto aa = AssociativeArray!(int,int)(16);
-	printf("Make aa\n");
 
 
 	aa.put(5,5);
-	printf("added element\n");
+	aa.put(6,6);
+	aa.put(7,7);
 
+	aa.toString();
+	printf("Collisions: %d\n",aa.mCollisionCount);
+}
 
-	foreach(ref value; aa){
-		printf("Printing value\n");
-		printf("%d\n",value);
-	}
-	printf("===done constructor test====\n");
+unittest{
+	printf("=== string key AA test ====\n");
+	auto aa = AssociativeArray!(string,int)(16);
+
+	aa.put("bob",5);
+	aa.put("mike",6);
+
+	aa.toString();
+	printf("Collisions: %d\n",aa.mCollisionCount);
 }
 
 extern(C) void main()
 {
-	static foreach(u; __traits(getUnitTests, __traits(parent, main)))
+	static foreach(u; __traits(getUnitTests, __traits(parent, main))){
 		u();
+	}
 }
