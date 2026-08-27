@@ -48,10 +48,15 @@ struct AssociativeArray(Key,Value,alias KeyHashFunc=null){
 		static if(isIntegral!Key){
 			pos = k % mCapacity;
 		}else{
-			//TODO: Look at std.digest
+			ubyte[8] bytes;
+
 			import std.digest.md;
-	//		pos = digest!MD5(k). % mCapacity;
-			pos =0;
+			auto data = digest!MD5(k);
+
+			size_t result=0;
+			result |= data[0];
+
+			pos = result % mCapacity;
 		}
 		return pos;
 	}
@@ -257,7 +262,7 @@ unittest{
 	aa.put(7,7);
 
 	aa.toString();
-	printf("Collisions: %d\n",aa.mCollisionCount);
+	printf("Collisions: %lu\n",aa.mCollisionCount);
 }
 
 unittest{
@@ -268,7 +273,7 @@ unittest{
 	aa.put("mike",6);
 
 	aa.toString();
-	printf("Collisions: %d\n",aa.mCollisionCount);
+	printf("Collisions: %lu\n",aa.mCollisionCount);
 }
 
 extern(C) void main()
