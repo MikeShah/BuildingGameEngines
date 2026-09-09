@@ -58,6 +58,8 @@ struct AssociativeArray(Key,Value,alias KeyHashFunc=toHash!Key){
 		static if(isIntegral!Key){
 			pos = k % mCapacity;
 		}else{
+            // TODO: Maybe just take bytes of the type and fields and
+            //       compress them?
 			ubyte[Key.sizeof] bytes;
 
 //			import std.digest.md;
