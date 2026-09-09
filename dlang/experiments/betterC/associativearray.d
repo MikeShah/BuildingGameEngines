@@ -24,6 +24,17 @@ struct ExampleType{
 	}
 }
 
+
+
+/// Generic 'toHash' for primitive types
+size_t toHash(T)(T value){
+    return value;
+}
+/// Specialization for string type
+size_t toHash(T:string)(T value){
+    return value.length;
+}
+
 /// Associtative Arrays are otherwise known as 'dictionaries'.
 /// Associtive arrays are unordered, and store unique key/value pairs.
 /// The 'Key' must be a type that has a 
@@ -31,7 +42,7 @@ struct ExampleType{
 /// Note: The 'KeyHashFunc' can be overriden to otherwise use 'toHash()' o
 ///	  or something else. For now, it uses a simple built-in hash
 ///	  function that is 'good enough' but not necessarily 'secure'
-struct AssociativeArray(Key,Value,alias KeyHashFunc=null){
+struct AssociativeArray(Key,Value,alias KeyHashFunc=toHash!Key){
 	size_t 	mSize;		// Number of 'keys' that have been added.
 	size_t 	mCapacity;	// Capacity for the hashtable (i.e. the 'table size')
 	bool	mOwns;		// Internally determine if we 'own' the memory.
@@ -41,20 +52,19 @@ struct AssociativeArray(Key,Value,alias KeyHashFunc=null){
 	//   	be turned off.
 	size_t mCollisionCount =0;
 
-
 	// Helper function for hashing of keys that all keys can use
 	size_t SimpleHash(Key k){
 		size_t pos;
 		static if(isIntegral!Key){
 			pos = k % mCapacity;
 		}else{
-			ubyte[8] bytes;
+			ubyte[Key.sizeof] bytes;
 
-			import std.digest.md;
-			auto data = digest!MD5(k);
+//			import std.digest.md;
+//			auto data = digest!MD5(k);
 
 			size_t result=0;
-			result |= data[0];
+//			result |= data[0];
 
 			pos = result % mCapacity;
 		}
@@ -139,11 +149,24 @@ struct AssociativeArray(Key,Value,alias KeyHashFunc=null){
 		return mData[pos];
 	}
 
-	ref kv* get(Key k){
-		size_t pos = SimpleHash(k) % mCapacity;
-//		assert(pos < mCapacity, "accessing memory outside of capacity");
-		// TODO:
-		return mData[pos];
+    /// Retrieve a key, if a key is not found, then returns a default value
+    /// which can be tested against.
+	Value get(Key k, Value defaultValue){
+		size_t pos = SimpleHash(k) % mCapacity;        
+		assert(pos < mCapacity, "accessing memory outside of capacity");
+        if(mData[pos] != null && mData[pos].key==k){
+            return mData[pos].value;
+        }
+            
+        while(pos < mCapacity){
+            if(mData[pos] == null) {pos++; continue;}
+            if(mData[pos].key== k){
+                return mData[pos].value;
+            }
+            pos++;
+        }
+        
+        return defaultValue;
 	}
 	/// TODO: Need to check return type
 	kv* put(Key k, Value v){
@@ -203,7 +226,7 @@ struct AssociativeArray(Key,Value,alias KeyHashFunc=null){
 				static if(isIntegral!(Key)){
 					printf("%d:",mData[i].key);
 				}else if(is(Key==string)){
-					//printf("%s:",mData[i].key);
+					printf("%s:",mData[i].key.ptr);
 				}
 				else{
 					//printf("%s:",mData[i].key.toString());
@@ -212,9 +235,9 @@ struct AssociativeArray(Key,Value,alias KeyHashFunc=null){
 				static if(isIntegral!(Value)){
 					printf("%d",mData[i].value);
 				}else if(is(Value==string)){
-					printf("%s:",mData[i].value);
+					printf("%s:",mData[i].value.ptr);
 				}else{
-					printf("%s",mData[i].value.toString());
+//					printf("%s",mData[i].value.toString());
 				}
 				// Handle printing out of commas
 				if(i<mCapacity-1 && (mData[i+1] !is null)){
@@ -256,13 +279,19 @@ unittest{
 	printf("=== Basic AA test ====\n");
 	auto aa = AssociativeArray!(int,int)(16);
 
-
 	aa.put(5,5);
 	aa.put(6,6);
 	aa.put(7,7);
 
 	aa.toString();
 	printf("Collisions: %lu\n",aa.mCollisionCount);
+
+    printf("Getting 5: %d\n",aa.get(5,-1));
+    printf("Getting 6: %d\n",aa.get(6,-1));
+    printf("Getting 7: %d\n",aa.get(7,-1));
+    if(aa.get(8,-1) != -1){
+        printf("Getting 8: %d\n",aa.get(8,-1));
+    }
 }
 
 unittest{
@@ -271,9 +300,28 @@ unittest{
 
 	aa.put("bob",5);
 	aa.put("mike",6);
+	aa.put("danny",7);
 
 	aa.toString();
 	printf("Collisions: %lu\n",aa.mCollisionCount);
+
+    printf("Getting mike: %d\n",aa.get("mike",-1));
+    printf("Getting non-existant: %d\n",aa.get("non-existant",-1));
+}
+
+unittest{
+	printf("=== string[string] test ====\n");
+	auto aa = AssociativeArray!(string,string)(16);
+
+	aa.put("bob","is bob");
+	aa.put("mike","is mike");
+	aa.put("danny","is danny");
+
+	aa.toString();
+	printf("Collisions: %lu\n",aa.mCollisionCount);
+
+    printf("Getting mike: %s\n",aa.get("mike","n/a").ptr);
+    printf("Getting non-existant: %s\n",aa.get("non-existant","n/a").ptr);
 }
 
 extern(C) void main()
