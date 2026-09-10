@@ -1,6 +1,7 @@
 // Based on the tutorial: https://hereket.com/posts/linux_creating_x11_windows/
 //
-// Build with: rdmd -L-lx11 x11window.d
+// Build with: rdmd -L-lX11 x11window.d
+//             NOTE: If you cannot find the x11 library try running 'pkg-config --libs x11' or pkg-config --libs X11
 //
 // Run the example and pass to the linker 'lx11' to link in
 // Note the first '-L' tells  us to pass some argument to the linker, you then// pass in '-l' to link a library, and specifically 'x11'
