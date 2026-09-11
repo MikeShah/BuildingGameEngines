@@ -33,6 +33,6 @@ bool Intersect(Ray a, Ray b){
 }
 
 bool Intersect(LineSegment a, LineSegment b){
-
+    assert(0,"Not yet implemented");
 }
 

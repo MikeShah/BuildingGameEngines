@@ -1,7 +1,7 @@
 // dmd -betterC -unittest -main string.d
 // Nice way to build fast:
 // ls string.d | entr -c -s 'dmd -g -betterC -unittest -main string.d && ./string '
-module dynarray;
+module bettercstring;
 
 extern(C):
 

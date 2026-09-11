@@ -15,4 +15,6 @@ void main(){
 	auto ufcs = [1,2,3].map!(a=> a*2);
 	writeln(ufcs);
 
+    // Or even simpler...
+    [1,2,3].map!(a=>a*2).writeln;
 }
