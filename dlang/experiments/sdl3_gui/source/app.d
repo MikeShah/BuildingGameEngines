@@ -4,7 +4,7 @@
 // [ ] - Create an 'input box'  widget 
 // [ ] - Handle 'dragging' of panel or other widgets
 // [ ] - Think about a good way to document what is available for each widget
-// [ ] - Add some sort of 'style' type to make style more consistent and uniform
+// [ ] - Add some sort of 'style' type to make style more consistent and uniform and have one single place to edit colors.
 // [ ] - Handle window resizing and mouse position (set logical render presentation)
 // [ ] - Add some getter functions to Treeview and dropdown for retrieving element index and text
 // [x] - Add a little 'dropdown' visual for the dropdown box.
@@ -15,7 +15,6 @@
 // [x] - Have gui.Update() return the SDL_Event so we don't lose it in the main application.
 // [x] - Potentially give every created 'widget' a text string name so it can be looked up and returned/modified
 
-
 /// @file: app.d
 import sdl_abstraction;
 import bindbc.sdl;
@@ -25,121 +24,125 @@ import widget;
 // All the code needed to setup a gui
 void demo_gui_setup(Widget ui){
   // Create a 'Panel' to our 'ui' and then add a lable
-	ui.AddChild(new Panel("panel1","Panel Text",0,0,200,400));
-	ui.AddChild(new Label("label1","testing with some text",10,12,180,16));
+  ui.AddChild(new Panel("panel1","Panel Text",0,0,200,400));
+  ui.AddChild(new Label("label1","testing with some text",10,12,180,16));
 
   // Let's now setup some other widgets
   // Button
-	auto b1 = new Button("button1","Button text",10,30,100,20);
-	b1.SetEventClickHandler( { writeln("button 1 clicked"); return true;} );
-	// Toggable button
-	auto bToggle = new ButtonToggle("buttontoggle3","Toggle text1",10,51,true);
-	bToggle.SetEventClickHandler( { writeln("bToggle was toggled"); return true;} );
+  auto b1 = new Button("button1","Button text",10,30,100,20);
+  b1.SetEventClickHandler( { writeln("button 1 clicked"); return true;} );
+  // Toggable button
+  auto bToggle = new ButtonToggle("buttontoggle3","Toggle text1",10,51,true);
+  bToggle.SetEventClickHandler( { writeln("bToggle was toggled"); return true;} );
 
   // The 'AddChild' member returns a type of 'widget', so we can use
   // 'chaining' to add multiple buttons to our user interface.
-	ui.AddChildByName("button1") // Widgets can also be added 'by name' of the string of the widget if you lose the objects scope. It must exist however.
-	  .AddChild(bToggle)
-	  .AddChild(new ButtonToggle("buttontoggle2","Toggle text2",10,72,false));
-	ui.AddChild(new Slider("slider1","Slider text",10,110,100,20,10.0f,0.0,100.0));
+  ui.AddChildByName("button1") // Widgets can also be added 'by name' of the string of the widget if you lose the objects scope. It must exist however.
+    .AddChild(bToggle)
+    .AddChild(new ButtonToggle("buttontoggle2","Toggle text2",10,72,false));
+  ui.AddChild(new Slider("slider1","Slider text",10,110,100,20,10.0f,0.0,100.0));
 
-	DropDown d1 = new DropDown("dropdown1","Dropdown",10,150,100,20);
-	d1.SetEventItemSelectedHandler( {writeln("clicked on an item"); return true;});
-	d1.AddElement("test1");
-	d1.AddElement("test2");
-	d1.AddElement("test3");
-	d1.AddElement("test4").AddElement("test5").AddElement("test6");
-	ui.AddChild(d1);
+  DropDown d1 = new DropDown("dropdown1","Dropdown",10,150,100,20);
+  d1.SetEventItemSelectedHandler( {writeln("clicked on an item"); return true;});
+  d1.AddElement("test1");
+  d1.AddElement("test2");
+  d1.AddElement("test3");
+  d1.AddElement("test4").AddElement("test5").AddElement("test6");
+  ui.AddChild(d1);
   //	ui.AddChild(new DropDown("dropdown1","Dropdown",10,130,100,20));
-	
+
   TreeView t1 = new TreeView("treeview1","Tree View",10,240,180,120);
   // Create a 'root' item at the top of the treeview
-	TreeItem root =  new TreeItem("Root");
-	t1.mRoot = root;
-	root.AddChild(new TreeItem("tree item 1"))
-  		.AddChild(new TreeItem("tree item 2"))
-	  	.AddChild(new TreeItem("tree item 3"));
+  TreeItem root =  new TreeItem("Root");
+  t1.mRoot = root;
+  root.AddChild(new TreeItem("tree item 1"))
+    .AddChild(new TreeItem("tree item 2"))
+    .AddChild(new TreeItem("tree item 3"));
 
-	TreeItem secondLayer = new TreeItem("has children");
-	root.AddChild(secondLayer);
-	secondLayer.AddChild(new TreeItem("nested item 1"));
-	secondLayer.AddChild(new TreeItem("nested item 2"));
+  TreeItem secondLayer = new TreeItem("has children");
+  root.AddChild(secondLayer);
+  secondLayer.AddChild(new TreeItem("nested item 1"));
+  secondLayer.AddChild(new TreeItem("nested item 2"));
 
-	TreeItem nested1 = new TreeItem("one level");
-	TreeItem nested2 = new TreeItem("two level");
-	TreeItem nested3 = new TreeItem("three level");
-	nested1.AddChild(nested2);
-	nested2.AddChild(nested3);
-	root.AddChild(nested1);
+  TreeItem nested1 = new TreeItem("one level");
+  TreeItem nested2 = new TreeItem("two level");
+  TreeItem nested3 = new TreeItem("three level");
+  nested1.AddChild(nested2);
+  nested2.AddChild(nested3);
+  root.AddChild(nested1);
 
-	ui.AddChild(t1);
-	ui.MovePosition(20,30);
+  ui.AddChild(t1);
+  ui.MovePosition(20,30);
 
 
   // Globals
   Globals.PrintWidgets();
 }
 
-void main()
-{
-    SDL_Window* window = SDL_CreateWindow("Dlang SDL3 GUI",640,480, SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALWAYS_ON_TOP);
+void run(){
+  SDL_Window* window = SDL_CreateWindow("Dlang SDL3 GUI",640,480, SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALWAYS_ON_TOP);
 
-    // Create a hardware accelerated mRenderer
-    SDL_Renderer* renderer = SDL_CreateRenderer(window,null);
-    // TODO Resizing does not yet work
-    //    This might be the thing needed: https://wiki.libsdl.org/SDL3/SDL_ConvertEventToRenderCoordinates
-    //    SDL_SetRenderLogicalPresentation(renderer, 640, 480,SDL_LOGICAL_PRESENTATION_LETTERBOX);
+  // Create a hardware accelerated mRenderer
+  SDL_Renderer* renderer = SDL_CreateRenderer(window,null);
+  // TODO Resizing does not yet work
+  //    This might be the thing needed: https://wiki.libsdl.org/SDL3/SDL_ConvertEventToRenderCoordinates
+  //    SDL_SetRenderLogicalPresentation(renderer, 640, 480,SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
-	GuiState gui = GuiState(renderer);
-	UI ui = new UI("ui1",&gui);	
+  GuiState gui = GuiState(renderer);
+  UI ui = new UI("ui1",&gui);	
   demo_gui_setup(ui);
 
+  long startTime = SDL_GetTicks();
+  long framesElapsed = 0;
+  bool gameIsRunning=true;
+  while(gameIsRunning){
 
-    long startTime = SDL_GetTicks();
-    long framesElapsed = 0;
-    bool gameIsRunning=true;
-    while(gameIsRunning){
-
-        // Store an SDL Event
-		// Note: We 'return' the event here because 'gui.Update()' polls for an event.
-		//       This way we can handle other events that our gui does not consume.
-		//       For example, if we 'click' on something off the gui user interfac,e we should
-		//       just handle that as a regular click.
+    // Store an SDL Event
+    // Note: We 'return' the event here because 'gui.Update()' polls for an event.
+    //       This way we can handle other events that our gui does not consume.
+    //       For example, if we 'click' on something off the gui user interfac,e we should
+    //       just handle that as a regular click.
     SDL_Event event = gui.Update();
-		if(event.type == SDL_EVENT_QUIT){
-			writeln("Exit event triggered");
-			gameIsRunning= false;
-		}
-		if(event.type == SDL_EVENT_KEY_DOWN){
-			ui.MovePosition(1,1);
-			ui.Print();
-		}
-		if(event.type == SDL_EVENT_MOUSE_BUTTON_DOWN){
-			writeln("Mouse clicked, but processed outside the GUI");
-		}
-        //SDL_Delay(8);  
-
-        // Slow down the application for the purpose of this demo
-        SDL_SetRenderDrawColor(renderer,100,190,255,SDL_ALPHA_OPAQUE);
-        // Clear the renderer each time we render
-        SDL_RenderClear(renderer);
-
-        ui.Render();
-
-        // Compute and display Fps
-        framesElapsed++;
-        if(SDL_GetTicks() - startTime > 1000){
-          startTime = SDL_GetTicks();
-          SDL_SetWindowTitle(window,("Dlang SDL3 GUI: FPS - "~framesElapsed.to!string).toStringz);
-          framesElapsed=0;
-        }
-        
-        // Final step is to present what we have copied into
-        // video memory
-        SDL_RenderPresent(renderer);
+    if(event.type == SDL_EVENT_QUIT){
+      writeln("Exit event triggered");
+      gameIsRunning= false;
     }
-    // Destroy our renderer
-    SDL_DestroyRenderer(renderer);
-    // Destroy our window
-    SDL_DestroyWindow(window);
+    if(event.type == SDL_EVENT_KEY_DOWN){
+      ui.MovePosition(1,1);
+      ui.Print();
+    }
+    if(event.type == SDL_EVENT_MOUSE_BUTTON_DOWN){
+      writeln("Mouse clicked, but processed outside the GUI");
+    }
+    //SDL_Delay(8);  
+
+    // Slow down the application for the purpose of this demo
+    SDL_SetRenderDrawColor(renderer,100,190,255,SDL_ALPHA_OPAQUE);
+    // Clear the renderer each time we render
+    SDL_RenderClear(renderer);
+
+    ui.Render();
+
+    // Compute and display Fps
+    framesElapsed++;
+    if(SDL_GetTicks() - startTime > 1000){
+      startTime = SDL_GetTicks();
+      SDL_SetWindowTitle(window,("Dlang SDL3 GUI: FPS - "~framesElapsed.to!string).toStringz);
+      framesElapsed=0;
+    }
+
+    // Final step is to present what we have copied into
+    // video memory
+    SDL_RenderPresent(renderer);
+  }
+  // Destroy our renderer
+  SDL_DestroyRenderer(renderer);
+  // Destroy our window
+  SDL_DestroyWindow(window);
+}
+
+
+void main()
+{
+  run();
 } // end main()

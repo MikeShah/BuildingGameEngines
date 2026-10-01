@@ -1,5 +1,5 @@
-/// @file: 01_sdl_dub_examples/01_sdl_hello_world/sdl_abstraction.d
-// Load the SDL2 library
+/// @file: experiments/box2d/
+// Load the SDL3 library
 module sdl_abstraction;
 
 import std.stdio;

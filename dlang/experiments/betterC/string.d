@@ -34,6 +34,7 @@ unittest{
 
 extern(C) void main()
 {
+  printf("Entering main\n");
     static foreach(u; __traits(getUnitTests, __traits(parent, main)))
         u();
 }

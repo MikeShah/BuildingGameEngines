@@ -1,4 +1,4 @@
-// Load the SDL2 library
+// Load the SDL library
 module sdl_abstraction;
 
 import std.stdio;

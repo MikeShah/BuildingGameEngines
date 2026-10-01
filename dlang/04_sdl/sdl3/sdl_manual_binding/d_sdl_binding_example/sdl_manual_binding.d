@@ -1,3 +1,5 @@
+extern(C):
+
 // Struct prototype
 struct SDL_Window;
 struct SDL_RWops;
@@ -1476,7 +1478,7 @@ extern(C){
 		int SDL_SetRenderDrawColor(SDL_Renderer * renderer, ubyte r, ubyte g, ubyte b, ubyte a);
 		bool SDL_RenderLine(SDL_Renderer *renderer, float x1, float y1, float x2, float y2);
 
-		void SDL_RenderPresent(SDL_Renderer * renderer);
+		bool SDL_RenderPresent(SDL_Renderer * renderer);
 		int SDL_RenderTexture(SDL_Renderer * renderer, SDL_Texture * texture, const SDL_FRect * srcrect, const SDL_FRect * dstrect);
 		bool SDL_RenderRect(SDL_Renderer *renderer, const SDL_FRect *rect);
 

@@ -1,6 +1,6 @@
 module player;
 
-// Load the SDL2 library
+// Load the SDL3 library
 import bindbc.sdl;
 import sprite;
 

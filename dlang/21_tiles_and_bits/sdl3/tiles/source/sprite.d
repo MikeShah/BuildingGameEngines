@@ -1,6 +1,6 @@
 module sprite;
 
-// Load the SDL2 library
+// Load the SDL3 library
 import bindbc.sdl;
 
 /// Store state for sprites and very simple animation

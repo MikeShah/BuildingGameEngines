@@ -4,7 +4,7 @@
 import std.stdio;
 import std.string;
 
-// Load the SDL2 library
+// Load the SDL3 library
 import bindbc.sdl;
 import sdl_abstraction;
 

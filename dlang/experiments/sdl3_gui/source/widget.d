@@ -2,9 +2,21 @@
 import bindbc.sdl;
 import std.stdio,std.string,std.conv; // for toZString
 
+
+
+struct FRect{
+  float x,y,w,h;
+};
+
+struct Color{
+	ubyte r,g,b,a;
+}
+
+
 // Overridable event handler class
 class Event{
 }
+
 // alias for events
 //alias EventHandler = bool delegate(Event event);
 alias EventHandler = bool delegate();
@@ -43,7 +55,6 @@ struct Globals{
   static void PrintWidgets(){
     writeln(sWidgetNames);
   }
-
 }
 
 
@@ -113,9 +124,6 @@ struct GuiState{
 	}
 }
 
-struct Color{
-	ubyte r,g,b,a;
-}
 
 /// All UI elements have the following
 abstract class Widget{

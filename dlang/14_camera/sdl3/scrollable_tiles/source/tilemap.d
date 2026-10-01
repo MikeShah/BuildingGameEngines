@@ -1,6 +1,6 @@
 module tilemap;
 
-// Load the SDL2 library
+// Load the SDL3 library
 import bindbc.sdl;
 
 /// DrawableTilemap is responsible for drawing 
