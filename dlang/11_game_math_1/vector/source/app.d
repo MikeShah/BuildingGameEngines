@@ -1,4 +1,4 @@
-/// Run with: 'dub'
+// Run with: 'dub'
 
 // Import D standard libraries
 import std.stdio, std.string, std.conv, std.math;
@@ -27,6 +27,9 @@ void main()
                                         640,
                                         480, 
                                         SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_RESIZABLE);
+
+  SDL_Window* w = SDL_CreateWindow
+    
 
 		// Create a hardware accelerated renderer
 		SDL_Renderer* renderer = null;
