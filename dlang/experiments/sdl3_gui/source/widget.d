@@ -2,7 +2,8 @@
 import bindbc.sdl;
 import std.stdio,std.string,std.conv; // for toZString
 
-
+void DrawRectangle(){
+}
 
 struct FRect{
   float x,y,w,h;
@@ -12,29 +13,13 @@ struct Color{
 	ubyte r,g,b,a;
 }
 
-
 // Overridable event handler class
 class Event{
 }
 
-// alias for events
-//alias EventHandler = bool delegate(Event event);
-alias EventHandler = bool delegate();
-
-/// A bunch of state 
-struct DefaultState{
-	bool leftMouseDown = false;
-	bool rightMouseDown = false;
-	bool leftMouseDrag = false;
-	bool rightMouseDrag = false;
-
-	void Reset(){
-		this = DefaultState();
-	}
-}
-
 // A global function that registers the names of every constructed widget
-// Note that if the 'widget' name exists already, this will cause an error.
+//
+// NOTE: If the 'widget' name exists already, this will cause an error.
 struct Globals{
   static Widget[string] sWidgetNames;
 
@@ -57,14 +42,32 @@ struct Globals{
   }
 }
 
+// alias for events
+//alias EventHandler = bool delegate(Event event);
+alias EventHandler = bool delegate();
 
-/// Holds global Graphical User Interface State
+/// A structure that holds state of interactions
+/// occurring within a GUI
+struct DefaultState{
+	bool leftMouseDown = false;
+	bool rightMouseDown = false;
+	bool leftMouseDrag = false;
+	bool rightMouseDrag = false;
+
+	void Reset(){
+		this = DefaultState();
+	}
+}
+
+
+/// Holds global Graphical User Interface(GUI) State
 /// NOTE: TODO This could also hold things like 'commands' or
 ///       perhaps other widget events
 struct GuiState{
 	SDL_Renderer* mRenderer;
 
 	float mouseX,mouseY;	
+  float mouseXprev,mouseYprev;
 	DefaultState mState;
 
 	/// Pass in the renderer for SDL to store it
@@ -97,6 +100,10 @@ struct GuiState{
 				SDL_Log("right button dragged %d",event.button.button);
 				mState.rightMouseDrag = true;
 			}
+
+      // Store the old mouse positions
+      mouseXprev = mouseX;
+      mouseYprev = mouseY;
 		}
 		if(event.type == SDL_EVENT_MOUSE_BUTTON_UP){
 			if(mState.leftMouseDown){
@@ -120,6 +127,7 @@ struct GuiState{
 				mState.rightMouseDown =true;
 			}
 		}
+
 		return event;
 	}
 }
@@ -146,8 +154,8 @@ abstract class Widget{
 
 	/// Add a child node
 	typeof(this) AddChild(Widget w){
-		this.mChildren ~= w;
 		w.mParent = this;
+		this.mChildren ~= w;
 
 		return this;
 	}
@@ -171,13 +179,31 @@ abstract class Widget{
 		this.mParent = p;
 		p.mChildren ~= this;;
 	}
+
+  // Override whatever the relative position is.
+  // You can call this right before rendering to reposition the widget manually
+	void SetAbsolutePosition(float x, float y){
+		mRect.x = x;
+		mRect.y = y;
+    writeln("About to iterate on object:",mWidgetName, " with children ",mChildren);
+		foreach(child ; mChildren){
+      if(child.mParent is null){
+      }else{
+        writeln("Updating position of:",child.mWidgetName);
+        float newX = child.mRect.x + child.mParent.mRect.x;
+        float newY = child.mRect.y + child.mParent.mRect.y;
+        child.SetAbsolutePosition(newX,newY);
+      }
+		}
+	}
 	/// Positions are always relative to the parent.
 	/// If there is no parent, then this is the 'absolute' position within the
 	/// window coordinates.
-	void MovePosition(float x, float y){
+	final void SetRelativePosition(float x, float y){
 		mRect.x = x;
 		mRect.y = y;
 	}
+
   final void SetUniqueWidgetName(string name){
     mWidgetName = name;
     Globals.RegisterName(name,this);
@@ -252,21 +278,31 @@ class UI : Widget{
 		mGuiState = guiState;
 		Render();	
 	}
-	/// Positions are always relative to the parent.
-	/// If there is no parent, then this is the 'absolute' position within the
-	/// window coordinates.
-	override void MovePosition(float x, float y){
-		mRect.x += x;
-		mRect.y += y;	
-		foreach(child ; mChildren){
-			float newX = child.mRect.x + x;
-			float newY = child.mRect.y + y;
-			child.MovePosition(newX,newY);
-		}
-	}
 
 	// Draw all child widgets	
 	void Render(){
+		SDL_FPoint mouse = SDL_FPoint(mGuiState.mouseX,mGuiState.mouseY);
+
+		bool isHovered = SDL_PointInRectFloat(&mouse, &mRect);
+
+    float x = mGuiState.mouseX - mGuiState.mouseXprev;
+    float y = mGuiState.mouseY - mGuiState.mouseYprev;
+    mRect.w=200;
+    mRect.h=400;
+
+    // TODO: NOT YET WORKING -- Need to fix SetAbsolutePosition it seems
+    // Handle dragging panel widget
+    if(isHovered){
+      writeln("FOUND YOU!",mRect);
+    }
+    if(isHovered && mGuiState.mState.leftMouseDrag){
+      writeln("mouse drag:",x,",",y);
+      writeln("Is clicked and has children: ",mChildren);
+      SetAbsolutePosition(mRect.x+x,mRect.y+y);
+//      SetRelativePosition(x,y);
+    }
+    SDL_SetRenderDrawColor(mGuiState.mRenderer,0,255,0,255);
+    SDL_RenderRect(mGuiState.mRenderer,&mRect);
 		foreach(child ; mChildren){
 			// Render the child node
 			child.Render(mGuiState);
@@ -274,11 +310,12 @@ class UI : Widget{
 	}
 }
 
+/// GUI Button
 class Button : Widget{
 	this(string name, string text,float x, float y, float w, float h){
     SetUniqueWidgetName(name);
 		SetText(text);
-		MovePosition(x,y);
+		SetRelativePosition(x,y);
 		SetSize(w,h);
 		// Default stroke color
 		SetStrokeColor(0,0,0,255);
@@ -309,12 +346,14 @@ class Button : Widget{
 	}
 }
 
+/// A Button that can be checked on/off.
 class ButtonToggle : Widget{
 	bool mChecked=false;		// for toggable things. TODO Consider if this should be 'state' later?
+
 	this(string name, string text,float x, float y, bool checked){
     SetUniqueWidgetName(name);
 		SetText(text);
-		MovePosition(x,y);
+		SetRelativePosition(x,y);
 		SetChecked(checked);
 		// Default stroke color
 		SetStrokeColor(0,0,0,255);
@@ -357,6 +396,7 @@ class ButtonToggle : Widget{
 	}
 }
 
+/// GUI Slider
 class Slider: Widget{
 	// Data associated with widgets
 	// TODO -- may have to abstract these elsewhere
@@ -367,7 +407,7 @@ class Slider: Widget{
 	this(string name, string text,float x, float y,float w, float h, float value, float minValue, float maxValue){
     SetUniqueWidgetName(name);
 		SetText(text);
-		MovePosition(x,y);
+		SetRelativePosition(x,y);
 		SetSize(w,h);
 		SetValue(value);
 		SetMinValue(minValue);
@@ -437,11 +477,13 @@ class Slider: Widget{
 		}
 	}
 }
+
+/// GUI Label
 class Label : Widget{
 	this(string name, string text,float x, float y, float w, float h){
     SetUniqueWidgetName(name);
 		SetText(text);
-		MovePosition(x,y);
+		SetRelativePosition(x,y);
 		SetSize(w,h);
 		// Default stroke color
 		SetStrokeColor(0,0,0,255);
@@ -457,11 +499,12 @@ class Label : Widget{
 	}
 }
 
+/// Panel widget
 class Panel : Widget{
 	this(string name, string text, float x, float y, float w, float h){
     SetUniqueWidgetName(name);
 		SetText(text);
-		MovePosition(x,y);
+		SetRelativePosition(x,y);
 		SetSize(w,h);
 		// Default stroke color
 		SetStrokeColor(0,192,0,64);
@@ -471,7 +514,10 @@ class Panel : Widget{
 
 		SDL_SetRenderDrawBlendMode(guiState.mRenderer, SDL_BLENDMODE_BLEND);
 
-		if(SDL_PointInRectFloat(&mouse, &mRect)){
+    // Handle hovering over panel
+		bool isHovered = SDL_PointInRectFloat(&mouse, &mRect);
+
+		if(isHovered){
 			SDL_SetRenderDrawColor(guiState.mRenderer, mColorForeground.r,mColorForeground.g,mColorForeground.b,128);
 		}else{
 			SDL_SetRenderDrawColor(guiState.mRenderer, mColorForeground.r,mColorForeground.g,mColorForeground.b,mColorForeground.a);
@@ -483,9 +529,11 @@ class Panel : Widget{
 		if(mText.length >0){
 			DrawTitleBar(guiState.mRenderer, mText, mRect.x, mRect.y-12, mRect.w, 12);
 		}
+
 	}
 }
 
+/// GUI Dropdown
 class DropDown : Widget{
 	string[] mElements;
 	bool mIsOpen=false; // Is the DropDown 'open'
@@ -495,7 +543,7 @@ class DropDown : Widget{
 	this(string name, string text, float x, float y, float w, float h){
     SetUniqueWidgetName(name);
 		SetText(text);
-		MovePosition(x,y);
+		SetRelativePosition(x,y);
 		SetSize(w,h);
 		// Default stroke color
 		SetStrokeColor(0,192,0,64);
@@ -644,6 +692,7 @@ class DropDown : Widget{
 	}
 }
 
+/// Single item in a 'TreeView'
 class TreeItem{
 	string mText;
 	int mDepth =1;
@@ -662,6 +711,7 @@ class TreeItem{
 	}
 }
 
+/// A collection of 'Tree items'
 class TreeView : Widget{
 	TreeItem mRoot;
 	long mFirstRenderedElementIndex=0;
@@ -669,7 +719,7 @@ class TreeView : Widget{
 	this(string name, string text, float x, float y, float w, float h){
     SetUniqueWidgetName(name);
 		SetText(text);
-		MovePosition(x,y);
+		SetRelativePosition(x,y);
 		SetSize(w,h);
 		// Default stroke color
 		SetStrokeColor(255,255,255,64);
@@ -785,8 +835,8 @@ class TreeView : Widget{
 		}
 		else if(SDL_PointInRectFloat(&mouse, &bottomBar) && guiState.mState.leftMouseDown){
 			mFirstRenderedElementIndex++;
-			if(mFirstRenderedElementIndex>bfs.length-1){
-				mFirstRenderedElementIndex=bfs.length-1;
+			if(mFirstRenderedElementIndex > bfs.length-1){
+				mFirstRenderedElementIndex = bfs.length-1;
 			}
 			guiState.mState.Reset(); // Handle scroll down 
 		}else if(SDL_PointInRectFloat(&mouse, &backgroundBar)){
@@ -810,6 +860,7 @@ class TreeView : Widget{
 		}
 	}
 }
+
 
 /// Helper function to draw a title bar
 void DrawTitleBar(SDL_Renderer* renderer, string text, float x, float y, float w, float h){
