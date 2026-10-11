@@ -7,6 +7,7 @@
 // [ ] - Add some sort of 'style' type to make style more consistent and uniform and have one single place to edit colors.
 // [ ] - Handle window resizing and mouse position (set logical render presentation)
 // [ ] - Add some getter functions to Treeview and dropdown for retrieving element index and text
+// [ ] - abstract out the 'sdl3' renderer, such that any API could be used.
 // [x] - Add a little 'dropdown' visual for the dropdown box.
 // [x] - Consider if 'dropdown' should store last selected item
 // [x] - Handle scroll for Treeview 
@@ -72,8 +73,7 @@ void demo_gui_setup(Widget ui){
   root.AddChild(nested1);
 
   ui.AddChild(t1);
-  ui.MovePosition(20,30);
-
+  ui.SetAbsolutePosition(180,60);
 
   // Globals
   Globals.PrintWidgets();
@@ -108,7 +108,9 @@ void run(){
       gameIsRunning= false;
     }
     if(event.type == SDL_EVENT_KEY_DOWN){
-      ui.MovePosition(1,1);
+      writeln("Resetting UI to top corner by pressing any key");
+//      ui.SetRelativePosition(1,1);
+      ui.SetAbsolutePosition(1,1);
       ui.Print();
     }
     if(event.type == SDL_EVENT_MOUSE_BUTTON_DOWN){
