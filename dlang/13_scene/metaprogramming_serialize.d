@@ -13,20 +13,24 @@ struct Attributes{
 }
 
 string Serialize(T)(T object){
- JSONValue jj = ["Type":T.stringof];
- static foreach(field ; T.tupleof){{
+  JSONValue jj = ["Type":T.stringof];
+  static foreach(field ; T.tupleof){{
     mixin(`jj.object["`,field.stringof,`"]= object.`,field.stringof,`;`);
- }} 
- return jj.toString;
+    // Note: When the loop unrolls, it is essentially generating
+    //       these two lines automatically for every field provided.
+    // jj.object["magic"]= object.magic;
+    // jj.object["info"]= object.info;
+  }} 
+  return jj.toString;
 }
 
 void main(){
-    Attributes example1 = Attributes(5,"some stuff");
-    Attributes example2 = Attributes(7,"some different data");
-    string serializedString = Serialize!Attributes(example1);
-    serializedString.writeln;
+  Attributes example1 = Attributes(5,"some stuff");
+  Attributes example2 = Attributes(7,"some different data");
+  string serializedString = Serialize!Attributes(example1);
+  serializedString.writeln;
 
-    Serialize!Attributes(example2).writeln;
+  Serialize!Attributes(example2).writeln;
 }
 
 
