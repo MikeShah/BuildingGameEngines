@@ -1,27 +1,17 @@
 /// @file: grid_partition/app.d
+// This demonstrates how to do grid partitioning with a fixed-size grid.
 import std.stdio, std.string, std.datetime.stopwatch, std.conv;
 import sdl_abstraction;
 import bindbc.sdl;
+import sprite, appstate;
 
-// Store the application state
-class AppState{
-  SDL_Window* mWindow;
-  SDL_Renderer* mRenderer;
-
-  ~this(){
-    // Destroy our renderer
-    SDL_DestroyRenderer(mRenderer);
-    // Destroy our window
-    SDL_DestroyWindow(mWindow);
-  }
-}
 
 // The scene
 class Scene{
   Sprite[] mSprites;
   Partition[] mPartitions;
 
-  void CreateScene(AppState app,size_t sprites){
+  void CreateScene(AppState app,size_t sprites, int partitions){
     import std.random;
     auto rnd = Random(unpredictableSeed);
 
@@ -32,11 +22,23 @@ class Scene{
       mSprites ~=s;
     }
 
-    // Create '4' separate partiions
+    // Create '4' separate partiions manually
+    /*
     mPartitions ~= new Partition(0,0,320,240);
     mPartitions ~= new Partition(320,0,320,240);
     mPartitions ~= new Partition(0,240,320,240);
     mPartitions ~= new Partition(320,240,320,240);
+*/
+    // You can try with '16' partitions as well to see if you
+    // get better performance
+    // NOTE: We are assuming a 640x480 sized window
+    int xSize = 640/partitions;
+    int ySize = 480/partitions;
+    for(int y=0; y < 4; y++){
+      for(int x=0; x < 4; x++){
+        mPartitions ~= new Partition(x*xSize,y*ySize,xSize,ySize);
+      }
+    }
   }
 
   void Render(AppState app){
@@ -59,38 +61,44 @@ class Scene{
     }
   }
 
-  void HandleCollision(){
+
+  void HandleCollisionNaive(AppState app){
     for(int a=0; a < mSprites.length; a++){
       for(int b=0; b < mSprites.length; b++){
         if(a==b){continue;}
         // Test if a collision happened
         if(SDL_HasRectIntersectionFloat(&mSprites[a].mRectangle, &mSprites[b].mRectangle)){
+          SDL_RenderRect(app.mRenderer,&mSprites[a].mRectangle);
         }
       }
     }
   }
 
-  void HandleCollisionPartitioned(){
+  void HandleCollisionPartitioned(AppState app){
+    // NOTE: If you want you can handle resetting the partitions less frequently
+    //       or only for objects as they 'move'.
+    //    
+    ResetPartitions();
+
+    // Handle collisions in each set
+    for(int i=0; i < mPartitions.length; i++){
+     mPartitions[i].HandleCollisionPartitioned(app);
+    }  
+  }
+
+  // Resets the object partitions
+  void ResetPartitions(){
+    // Reset all of the partitions each frame
+    for(int i=0; i < mPartitions.length; i++){
+      mPartitions[i].Reset();
+    }
     // Update the sets
     for(int i=0; i < mPartitions.length; i++){
       for(int a=0; a < mSprites.length; a++){
         mPartitions[i].TestAndUpdateSet(mSprites[a]);
       }
     }
-
-    // Handle collisions in each set
-    for(int i=0; i < mPartitions.length; i++){
-     mPartitions[i].HandleCollisionPartitioned();
-    }
-
-    // Reset all of the partitions each frame
-    for(int i=0; i < mPartitions.length; i++){
-      mPartitions[i].Reset();
-    }
-    
   }
-
-
 
 }
 
@@ -120,12 +128,19 @@ class Partition{
     mCollection = [];
   }
 
-  void HandleCollisionPartitioned(){
+  void HandleCollisionPartitioned(AppState app){
+
+    SDL_SetRenderDrawColor(app.mRenderer,255,255,255,255);
+    SDL_RenderRect(app.mRenderer,&mBoundary);
+    SDL_SetRenderDrawColor(app.mRenderer,255,0,0,255);
+
+
     for(int a=0; a < mCollection.length; a++){
       for(int b=0; b < mCollection.length; b++){
         if(a==b){continue;}
         // Test if a collision happened
         if(SDL_HasRectIntersectionFloat(&mCollection[a].mRectangle, &mCollection[b].mRectangle)){
+          SDL_RenderRect(app.mRenderer,&mCollection[a].mRectangle);
         }
       }
     }
@@ -135,47 +150,12 @@ class Partition{
 
 
 
-class Sprite{
-  SDL_FRect mRectangle;
-  SDL_Texture* mTexture;
-  bool xUp;
-  bool yUp;
-
-  this(AppState app,float x,float y){
-    // Load the bitmap surface
-    SDL_Surface* myTestImage   = SDL_LoadBMP("./assets/images/test.bmp");
-    // Create a texture from the surface
-    mTexture = SDL_CreateTextureFromSurface(app.mRenderer,myTestImage);
-    // Done with the bitmap surface pixels after we create the texture, we have
-    // effectively updated memory to GPU texture.
-    SDL_DestroySurface(myTestImage);
-    // Rectangle is where we will represent the shape.
-    mRectangle.x = x;
-    mRectangle.y = y;
-    mRectangle.w = 20;
-    mRectangle.h = 20;
-  }
-
-  void Render(AppState app){
-      // Copy a texture (or portion of a texture) to another
-      // portion of video memory (i.e. a 2D grid of texels 
-      // which span the width and height of the window)
-      SDL_RenderTexture(app.mRenderer,mTexture,null,&mRectangle);
-  }
-
-  ~this(){
-    // Free Video Memory
-    SDL_DestroyTexture(mTexture);
-  }
-
-}
-
 // Entry point 
 struct GameApplication{
   AppState mAppState;
   Scene    mScene;
 
-  this(string title, int sprites=5){
+  this(string title, int sprites, int partitions){
     mAppState = new AppState;
     // Create na SDL Window
     mAppState.mWindow = SDL_CreateWindow(title.toStringz,640,480, SDL_WINDOW_ALWAYS_ON_TOP);
@@ -184,7 +164,8 @@ struct GameApplication{
 
     // Create a new scene
     mScene = new Scene;
-    mScene.CreateScene(mAppState,sprites);
+    assert(partitions> 0, "Partiions must be greater than 0");
+    mScene.CreateScene(mAppState,sprites, partitions);
   }
 
   void MainLoop(){
@@ -198,9 +179,16 @@ struct GameApplication{
     while(gameIsRunning){
       frameCount++;
       if(sw.peek.total!"msecs" > 1000){
-        SDL_SetWindowTitle(mAppState.mWindow,("Spatial partiioning demo: (FPS="~frameCount.to!string ~ ") NaiveCollision="~NaiveCollision.to!string).toStringz);
+        SDL_SetWindowTitle(mAppState.mWindow,("Spatial partition demo: (FPS="~frameCount.to!string ~ ") NaiveCollision="~NaiveCollision.to!string).toStringz);
         sw.reset();
         frameCount=0;
+
+        // NOTE:
+        // You can try some tricks to update your grid less often, like either
+        // doing this fewer times per frame, or only when objects move.
+//        if(NaiveCollision==0){
+//          mScene.ResetPartitions();
+//        }
       }
       // Store an SDL Event
       SDL_Event event;
@@ -226,9 +214,9 @@ struct GameApplication{
 
       mScene.Render(mAppState);
       if(NaiveCollision==1){
-        mScene.HandleCollision();
+        mScene.HandleCollisionNaive(mAppState);
       }else{
-        mScene.HandleCollisionPartitioned();
+        mScene.HandleCollisionPartitioned(mAppState);
       }
 
       // Final step is to present what we have copied into
@@ -240,12 +228,13 @@ struct GameApplication{
 }
 
 void main(string[] args){
-  if(args.length < 2){
+  if(args.length < 3){
     writeln("============== READ ===============");
-    writeln("Re-run with ./prog 400 or dub -- 400");
-    writeln("The second argument is the number of sprites");
+    writeln("Re-run with ./prog 400 4 or dub -- 400 4");
+    writeln("The first argument is the number of sprites");
+    writeln("The second argument is the number of partiions (2=2x2, 4=4x4");
     return;
   }
-  GameApplication app = GameApplication("Spatial Partitioning demo",args[1].to!int);
+  GameApplication app = GameApplication("Spatial Partitioning demo",args[1].to!int, args[2].to!int);
   app.MainLoop();
 } // end main()
