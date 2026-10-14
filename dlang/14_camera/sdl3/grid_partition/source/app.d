@@ -34,8 +34,8 @@ class Scene{
     // NOTE: We are assuming a 640x480 sized window
     int xSize = 640/partitions;
     int ySize = 480/partitions;
-    for(int y=0; y < 4; y++){
-      for(int x=0; x < 4; x++){
+    for(int y=0; y < partitions; y++){
+      for(int x=0; x < partitions; x++){
         mPartitions ~= new Partition(x*xSize,y*ySize,xSize,ySize);
       }
     }
