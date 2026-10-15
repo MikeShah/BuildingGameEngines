@@ -102,7 +102,10 @@ class Scene{
 
 }
 
-
+// A partition represents a 'cell' in a spatial partitioning
+// algorithm. The square cell is represented by the SDL_FRect
+// boundary, and otherwise keeps a collection of sprites
+// that belong to that partition.
 class Partition{
   SDL_FRect mBoundary;
   Sprite[] mCollection;
@@ -128,12 +131,13 @@ class Partition{
     mCollection = [];
   }
 
+  // Per partition, we handle collision and state updates
+  // for our objects.
   void HandleCollisionPartitioned(AppState app){
 
     SDL_SetRenderDrawColor(app.mRenderer,255,255,255,255);
     SDL_RenderRect(app.mRenderer,&mBoundary);
     SDL_SetRenderDrawColor(app.mRenderer,255,0,0,255);
-
 
     for(int a=0; a < mCollection.length; a++){
       for(int b=0; b < mCollection.length; b++){
