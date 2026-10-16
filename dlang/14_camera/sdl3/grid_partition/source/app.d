@@ -81,9 +81,14 @@ class Scene{
     ResetPartitions();
 
     // Handle collisions in each set
+    // NOTE: You could try to handle this in parallel,
+    //       just be careful of state changes on your
+    //       code, as well as SDL code.
     for(int i=0; i < mPartitions.length; i++){
      mPartitions[i].HandleCollisionPartitioned(app);
     }  
+
+
   }
 
   // Resets the object partitions
