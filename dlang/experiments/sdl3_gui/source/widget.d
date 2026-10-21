@@ -319,7 +319,7 @@ class UI : Widget{
         mRect.h = child.mRect.h;
       }
     }
-    writeln("Widget size is:",mRect.w,",",mRect.h);
+    //writeln("Widget size is automatically calculated as:",mRect.w,",",mRect.h);
 
 		bool isHovered = SDL_PointInRectFloat(&mouse, &mRect);
     // If overlapping any child widget, then we are 'not hoverable' as we 
