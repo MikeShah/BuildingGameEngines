@@ -66,8 +66,8 @@ struct DefaultState{
 struct GuiState{
 	SDL_Renderer* mRenderer;
 
-	float mouseX,mouseY;	
-  float mouseXprev,mouseYprev;
+	float mouseX=0.0f,mouseY=0.0f;	
+  float mouseXprev=0.0f,mouseYprev=0.0f;
 	DefaultState mState;
 
 	/// Pass in the renderer for SDL to store it
@@ -139,7 +139,7 @@ abstract class Widget{
 	Widget mParent=null; 	  // Keep track of the parent
 	Widget[] mChildren;		  // Any children of the Widget
 	string mText="";		    // Any text associated with the widget
-	SDL_FRect mRect;		    // The rectangle representing where to render the widget
+	SDL_FRect mRect = SDL_FRect(0,0,0,0);		    // The rectangle representing where to render the widget
 			            				// This also represents the 'clickable' surface
 	Color mColorForeground;
 	Color mColorBackground;
@@ -193,10 +193,12 @@ abstract class Widget{
     writeln("About to iterate on object:",mWidgetName, " with children ",mChildren);
 		foreach(child ; mChildren){
       if(child.mParent is null){
+        writeln("I am the parent");
       }else{
         writeln("Updating position of:",child.mWidgetName);
         float newX = child.mRect.x + child.mParent.mRect.x;
         float newY = child.mRect.y + child.mParent.mRect.y;
+        writeln("newX and newY:",child.mWidgetName);
         child.SetAbsolutePosition(newX,newY);
       }
 		}
@@ -205,8 +207,27 @@ abstract class Widget{
 	/// If there is no parent, then this is the 'absolute' position within the
 	/// window coordinates.
 	final void SetRelativePosition(float x, float y){
+    writeln("Updating position of:",mWidgetName);
 		mRect.x = x;
 		mRect.y = y;
+    writeln("newX and newY:",mRect.x,",",mRect.y);
+	}
+
+	/// Positions are always relative to the parent.
+	/// If there is no parent, then this is the 'absolute' position within the
+	/// window coordinates.
+	final void MoveAbsolutePosition(float x, float y){
+    writeln("Updating position of:",mWidgetName);
+		mRect.x += x;
+		mRect.y += y;
+    writeln("newX and newY:",mRect.x,",",mRect.y);
+		foreach(child ; mChildren){
+      if(child.mParent is null){
+        writeln("I am the parent");
+      }else{
+        child.MoveAbsolutePosition(x,y);
+      }
+		}
 	}
 
   final void SetUniqueWidgetName(string name){
@@ -288,23 +309,41 @@ class UI : Widget{
 	void Render(){
 		SDL_FPoint mouse = SDL_FPoint(mGuiState.mouseX,mGuiState.mouseY);
 
-		bool isHovered = SDL_PointInRectFloat(&mouse, &mRect);
+    // Search through all child widgets and find the 'biggest' widget
+    // This represents the 'hoverable' space
+		foreach(child ; mChildren){
+      if(child.mRect.w > mRect.w){
+        mRect.w = child.mRect.w;
+      }
+      if(child.mRect.h > mRect.h){
+        mRect.h = child.mRect.h;
+      }
+    }
+    writeln("Widget size is:",mRect.w,",",mRect.h);
 
-    float x = mGuiState.mouseX - mGuiState.mouseXprev;
-    float y = mGuiState.mouseY - mGuiState.mouseYprev;
-    mRect.w=200;
-    mRect.h=400;
+		bool isHovered = SDL_PointInRectFloat(&mouse, &mRect);
+    // If overlapping any child widget, then we are 'not hoverable' as we 
+    // are interacting with some other child widget
+    // The exception however, is if the child has the maximum size of the
+    // hoverable area, as this indicates some sort of 'panel' widget.
+		foreach(child ; mChildren){
+      if(child.mRect.w == mRect.w && child.mRect.h == mRect.h){
+        continue;
+      }
+		  if(SDL_PointInRectFloat(&mouse, &child.mRect)){
+        isHovered = false;
+      }
+    }
+
 
     // TODO: NOT YET WORKING -- Need to fix SetAbsolutePosition it seems
+    float x = mGuiState.mouseX - mGuiState.mouseXprev;
+    float y = mGuiState.mouseY - mGuiState.mouseYprev;
     // Handle dragging panel widget
-    if(isHovered){
-//      writeln("Hovering over widget !",mRect);
-    }
-    if(isHovered && mGuiState.mState.leftMouseDrag){
-      writeln("mouse drag:",x,",",y);
+    if(isHovered && mGuiState.mState.rightMouseDrag){
+      writeln("right mouse drag:",x,",",y);
       writeln("Is clicked and has children: ",mChildren);
-//      SetAbsolutePosition(mRect.x+x,mRect.y+y);
-//      SetRelativePosition(x,y);
+      MoveAbsolutePosition(x,y);
     }
     SDL_SetRenderDrawColor(mGuiState.mRenderer,0,255,0,255);
     SDL_RenderRect(mGuiState.mRenderer,&mRect);
@@ -580,6 +619,15 @@ class DropDown : Widget{
   // Get the last selected index
   int GetLastSelectedIndex() const{
     return mLastIndexSelected;
+  }
+
+  // Get the last selected index text.
+  // If no element was selected, then return an empty string.
+  string GetLastSelectedIndexText() const{
+    if(mLastIndexSelected>-1 && mLastIndexSelected < mElements.length){
+      return mElements[mLastIndexSelected].mText;
+    }
+    return "";
   }
 
   // Render the Dropdown

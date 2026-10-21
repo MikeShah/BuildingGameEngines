@@ -1,12 +1,15 @@
 /// TODO list
-// [ ] - Figure out how to 'tie' variables to widgets to get values back
-//		 it is created on the fly.
+// [ ] - Figure out how to 'tie' variables to widgets to get values back on the fly (perhaps using 'ref' and constructor?)
 // [ ] - Create an 'input box'  widget 
-// [ ] - Handle 'dragging' of panel or other widgets
+// [x] - Handle 'dragging' of panel or other widgets
+//   - [ ] Make gui drag from pivot point, or otherwise only from title bar.
+//   - [ ] May be nice to also 'dock' gui and other widgets to sidebars
+// [ ] - Need to be able to 'scale' (maximize/minimize) gui.
 // [ ] - Think about a good way to document what is available for each widget
 // [ ] - Add some sort of 'style' type to make style more consistent and uniform and have one single place to edit colors.
 // [ ] - Handle window resizing and mouse position (set logical render presentation)
 // [ ] - Add some getter functions to Treeview and dropdown for retrieving element index and text
+//    - [x] Completed for dropdown
 // [ ] - abstract out the 'sdl3' renderer, such that any API could be used.
 // [x] - Add a little 'dropdown' visual for the dropdown box.
 // [x] - Consider if 'dropdown' should store last selected item
@@ -47,10 +50,10 @@ void demo_gui_setup(Widget ui){
   d1.SetEventItemSelectedHandler( 
       // Delegate function
       {
-        writeln("clicked on item:",d1.GetLastSelectedIndex()); 
+        writeln("clicked item:",d1.GetLastSelectedIndex(), " with text: ",d1.GetLastSelectedIndexText()); 
         return true;
        }
-      );
+  );
   // You can add new drop down items one at a time
   d1.AddDropDownItem(new DropDownItem("test1"));
   d1.AddDropDownItem(new DropDownItem("test2"));
