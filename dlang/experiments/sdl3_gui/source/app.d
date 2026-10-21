@@ -51,9 +51,11 @@ void demo_gui_setup(Widget ui){
         return true;
        }
       );
-  d1.AddDropDownItem("test1");
-  d1.AddDropDownItem("test2");
-  d1.AddDropDownItem("test3");
+  // You can add new drop down items one at a time
+  d1.AddDropDownItem(new DropDownItem("test1"));
+  d1.AddDropDownItem(new DropDownItem("test2"));
+  d1.AddDropDownItem(new DropDownItem("test3"));
+  // An overload of the function allows to simply use the text string otherwise.
   d1.AddDropDownItem("test4").AddDropDownItem("test5").AddDropDownItem("test6");
   ui.AddChild(d1);
   //	ui.AddChild(new DropDown("dropdown1","Dropdown",10,130,100,20));

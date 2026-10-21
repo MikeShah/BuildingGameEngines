@@ -538,9 +538,20 @@ class Panel : Widget{
 	}
 }
 
+// TODO:  Consider either different types of drop down items, or perhaps that
+//        a dropdown could contain any type of widget.
+class DropDownItem{
+  string mText;
+
+	this(string text){
+		mText = text;
+	}
+}
+
+
 /// GUI Dropdown
 class DropDown : Widget{
-	string[] mElements;
+	DropDownItem[] mElements;
 	bool mIsOpen=false; // Is the DropDown 'open'
 	int mLastIndexSelected = -1;	// No index selected
 	long mFirstRenderedElementIndex;
@@ -554,10 +565,15 @@ class DropDown : Widget{
 		SetStrokeColor(0,192,0,64);
 	}
 
-  // Append another string to the dropdown list.
-  // TODO: In the future, a dropdown should be able to consist of any widget
-	typeof(this) AddDropDownItem(string temp){
-		mElements ~= temp;
+  // Append a new drop down item to the dropdown list.
+	typeof(this) AddDropDownItem(DropDownItem item){
+		mElements ~= item;
+    return this;
+	}
+
+  // Construct and append a new dropdown item to the dropdown list from a text string
+	typeof(this) AddDropDownItem(string dropDownItemText){
+		mElements ~= new DropDownItem(dropDownItemText);
     return this;
 	}
 
@@ -595,7 +611,7 @@ class DropDown : Widget{
 		SDL_SetRenderDrawColor(guiState.mRenderer, 0,0,0,255);
 		if(!mIsOpen){
 			if(mLastIndexSelected != -1){
-				SDL_RenderDebugText(guiState.mRenderer, lastSelected.x+2, lastSelected.y+2, mElements[mLastIndexSelected].toStringz);
+				SDL_RenderDebugText(guiState.mRenderer, lastSelected.x+2, lastSelected.y+2, mElements[mLastIndexSelected].mText.toStringz);
 			}else if(mLastIndexSelected==-1){
 				SDL_RenderDebugText(guiState.mRenderer, lastSelected.x+lastSelected.w/2, lastSelected.y+2, "-".toStringz);
 			}
@@ -622,7 +638,7 @@ class DropDown : Widget{
 						mIsOpen = false;
             // TODO: Need to think of a better way to update the last selected index versus a linear search
             for(int i=0; i < mElements.length;i++){
-              if(elem == mElements[i]){
+              if(elem.mText == mElements[i].mText){
                 mLastIndexSelected = i; // update index of selected element
               }
             }
@@ -640,7 +656,7 @@ class DropDown : Widget{
 				SDL_SetRenderDrawColor(guiState.mRenderer, 0,0,0,255);
 				SDL_RenderRect(guiState.mRenderer, &r);
 				SDL_SetRenderDrawColor(guiState.mRenderer, 0,0,0,255);
-				SDL_RenderDebugText(guiState.mRenderer, r.x+2, r.y+2, elem.toStringz);
+				SDL_RenderDebugText(guiState.mRenderer, r.x+2, r.y+2, elem.mText.toStringz);
 			}
 
 			// Draw a scrollbar on the right	
