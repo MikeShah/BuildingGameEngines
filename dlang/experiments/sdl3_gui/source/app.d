@@ -44,11 +44,17 @@ void demo_gui_setup(Widget ui){
   ui.AddChild(new Slider("slider1","Slider text",10,110,100,20,10.0f,0.0,100.0));
 
   DropDown d1 = new DropDown("dropdown1","Dropdown",10,150,100,20);
-  d1.SetEventItemSelectedHandler( {writeln("clicked on an item"); return true;});
-  d1.AddElement("test1");
-  d1.AddElement("test2");
-  d1.AddElement("test3");
-  d1.AddElement("test4").AddElement("test5").AddElement("test6");
+  d1.SetEventItemSelectedHandler( 
+      // Delegate function
+      {
+        writeln("clicked on item:",d1.GetLastSelectedIndex()); 
+        return true;
+       }
+      );
+  d1.AddDropDownItem("test1");
+  d1.AddDropDownItem("test2");
+  d1.AddDropDownItem("test3");
+  d1.AddDropDownItem("test4").AddDropDownItem("test5").AddDropDownItem("test6");
   ui.AddChild(d1);
   //	ui.AddChild(new DropDown("dropdown1","Dropdown",10,130,100,20));
 

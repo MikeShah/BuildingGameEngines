@@ -135,12 +135,12 @@ struct GuiState{
 
 /// All UI elements have the following
 abstract class Widget{
-  string mWidgetName;   // A unique Id for the widget
-	Widget mParent=null; 	// Keep track of the parent
-	Widget[] mChildren;		// Any children of the Widget
-	string mText="";		// Any text associated with the widget
-	SDL_FRect mRect;		// The rectangle representing where to render the widget
-							// This also represents the 'clickable' surface
+  string mWidgetName;     // A unique Id for the widget
+	Widget mParent=null; 	  // Keep track of the parent
+	Widget[] mChildren;		  // Any children of the Widget
+	string mText="";		    // Any text associated with the widget
+	SDL_FRect mRect;		    // The rectangle representing where to render the widget
+			            				// This also represents the 'clickable' surface
 	Color mColorForeground;
 	Color mColorBackground;
 
@@ -174,8 +174,13 @@ abstract class Widget{
 
 	/// Sets the parent widget
 	/// Makes this item a child of the widget.
-	/// TODO: Check that child is not already part mChildren collection
 	final void SetParent(Widget p){
+    assert(this !is p, "Cannot parent object to itself");
+	  /// Check that 'p' is not any of the child widgets
+    /// TODO: This is only doing checking 1-level of depth, we should do a full traversal.
+    foreach(c ; mChildren){
+      assert(c !is p, "Cannot have child widget as parent");
+    }
 		this.mParent = p;
 		p.mChildren ~= this;;
 	}
@@ -293,12 +298,12 @@ class UI : Widget{
     // TODO: NOT YET WORKING -- Need to fix SetAbsolutePosition it seems
     // Handle dragging panel widget
     if(isHovered){
-      writeln("FOUND YOU!",mRect);
+//      writeln("Hovering over widget !",mRect);
     }
     if(isHovered && mGuiState.mState.leftMouseDrag){
       writeln("mouse drag:",x,",",y);
       writeln("Is clicked and has children: ",mChildren);
-      SetAbsolutePosition(mRect.x+x,mRect.y+y);
+//      SetAbsolutePosition(mRect.x+x,mRect.y+y);
 //      SetRelativePosition(x,y);
     }
     SDL_SetRenderDrawColor(mGuiState.mRenderer,0,255,0,255);
@@ -549,13 +554,19 @@ class DropDown : Widget{
 		SetStrokeColor(0,192,0,64);
 	}
 
-	// TODO: Change this 
-	// 
-	typeof(this) AddElement(string temp){
+  // Append another string to the dropdown list.
+  // TODO: In the future, a dropdown should be able to consist of any widget
+	typeof(this) AddDropDownItem(string temp){
 		mElements ~= temp;
     return this;
 	}
 
+  // Get the last selected index
+  int GetLastSelectedIndex() const{
+    return mLastIndexSelected;
+  }
+
+  // Render the Dropdown
 	override void Render(GuiState* guiState){
 		SDL_SetRenderDrawBlendMode(guiState.mRenderer, SDL_BLENDMODE_BLEND);
 
@@ -609,11 +620,16 @@ class DropDown : Widget{
 					// Select the element 
 					if(guiState.mState.leftMouseDown){
 						mIsOpen = false;
+            // TODO: Need to think of a better way to update the last selected index versus a linear search
+            for(int i=0; i < mElements.length;i++){
+              if(elem == mElements[i]){
+                mLastIndexSelected = i; // update index of selected element
+              }
+            }
 						// Execute the event handler for the selected item.
 						if(mEventHandlerItemSelected){
 							writeln("Detected a left-click on element:",elem);
 							mEventHandlerItemSelected();
-							mLastIndexSelected = cast(int)idx; // update index of selected element
 						}
 						guiState.mState.Reset();
 					}
@@ -684,7 +700,6 @@ class DropDown : Widget{
 			mIsOpen = false;
 		}
 			
-
 		// Title bar
 		if(mText.length >0){
 			DrawTitleBar(guiState.mRenderer, mText, mRect.x, mRect.y,mRect.w, mRect.h);
