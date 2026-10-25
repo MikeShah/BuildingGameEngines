@@ -23,17 +23,10 @@ void DrawGrid(SDL_Renderer* renderer, int size, int w, int h){
 void main()
 {
     // Create an SDL window
-    SDL_Window* window= SDL_CreateWindow("D SDL Vector",
-                                        640,
-                                        480, 
-                                        SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_RESIZABLE);
-
-  SDL_Window* w = SDL_CreateWindow
-    
+    SDL_Window* window= SDL_CreateWindow("D SDL Vector", 640,480,  SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_RESIZABLE);
 
 		// Create a hardware accelerated renderer
-		SDL_Renderer* renderer = null;
-		renderer = SDL_CreateRenderer(window,null);
+		SDL_Renderer* renderer = SDL_CreateRenderer(window,null);
 
     // Infinite loop for our application
     bool gameIsRunning = true;
@@ -100,7 +93,6 @@ void main()
         SDL_RenderPresent(renderer);
 
     }
-
 
     // Destroy our window
     SDL_DestroyWindow(window);
