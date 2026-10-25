@@ -4,13 +4,15 @@
 import std.traits;
 import std.stdio;
 
+@Serialize struct Serialize{}
+
 struct Component{
     float a,b,c;
 }
 
 struct SomeType{
-    int i;
-    float f;
+    @Serialize int i;
+    @Serialize float f;
     Component c;
 }
 
@@ -50,9 +52,9 @@ void main(){
     // Map of parameters
     bool[string] SetParams;
     foreach(idx, name; AllParams){
-        
+        mixin("writeln(hasUDA!(SomeType."~name~",Serialize));");
         //mixin("enum ThisParam = AllParams."~name~";");
-        SetParams[name.stringof] = true;
+        SetParams[name] = true;
     }
 
     writeln(SetParams);
