@@ -1,5 +1,5 @@
 /// @file: /aabb/ 
-import std.stdio, std.string, std.math;
+import std.stdio, std.string, std.math, std.random;
 import sdl_abstraction;
 import bindbc.sdl;
 
@@ -17,11 +17,12 @@ struct PhysicsGlobals{
 }
 
 PhysicsGlobals g;
+Random rnd;
 
 // Initialize globals
 shared static this(){
+  rnd = Random(unpredictableSeed);
   g = PhysicsGlobals(10,20);
-
 }
 
 /// Make an SDL Rectangle
@@ -34,13 +35,48 @@ SDL_FRect MakeRectangle(float x, float y, float w, float h){
   return rectangle;
 }
 
+struct Box{
+  Point* p1 = new Point(10,10,1,1,2.0f);
+  Point* p2 = new Point(10,40,1,1,2.0f);
+  Point* p3 = new Point(40,10,1,1,2.0f);
+  Point* p4 = new Point(40,40,1,1,2.0f);
+
+  Stick s1,s2,s3,s4,s5;
+  this(float x, float y, float w, float h){
+    s1=Stick(p1,p2);
+    s2=Stick(p2,p4);
+    s3=Stick(p4,p3);
+    s4=Stick(p3,p1);
+  //  s5=Stick(p3,p4);
+  }
+
+  void Update(float deltaTime){
+//    s1.Update(deltaTime);
+//    s2.Update(deltaTime);
+//    s3.Update(deltaTime);
+//    s4.Update(deltaTime);
+//    s5.Update(deltaTime);
+  }
+
+  void Render(SDL_Renderer* r){
+    s1.Render(r);
+    s2.Render(r);
+    s3.Render(r);
+    s4.Render(r);
+//    s5.Render(r);
+  }
+}
+
+// Note: For a stick you must do the allocation
 struct Stick{
-  Point p1;
-  Point p2;
+  Point* p1;
+  Point* p2;
   float length;
-  this(Point p1_, Point p2_){
+
+  this(Point* p1_, Point* p2_){
     p1=p1_;
     p2=p2_;
+    // Compute Length between two points automatically
     float dx = p1.x - p2.x;
     float dy = p1.y - p2.y;
     length = sqrt(dx*dx + dy*dy); 
@@ -48,6 +84,8 @@ struct Stick{
   void Update(float deltaTime){
     p1.Update(deltaTime);
     p2.Update(deltaTime);
+    p1.Constrain();
+    p2.Constrain();
 
     float dx = p2.x - p1.x;
     float dy = p2.y - p1.y;
@@ -62,8 +100,6 @@ struct Stick{
     p2.x += offsetX;
     p2.y += offsetY;
     
-    p1.Constrain();
-    p2.Constrain();
   }
 
   void Render(SDL_Renderer* r){
@@ -95,8 +131,8 @@ struct Point{
     float accY = g.forceY / mass;
 
     // Velocity is difference of positions
-    vx = x- prevX;
-    vy = y- prevY;
+    vx = x - prevX;
+    vy = y - prevY;
     prevX = x;
     prevY = y;
 
@@ -128,7 +164,6 @@ struct Point{
   }
 
   void Constrain(){
-
     // Verlet Constraint
     // Compute velocity again
     vx = x- prevX;
@@ -177,13 +212,11 @@ struct Application{
   SDL_Renderer* mRenderer;
   bool mGameIsRunning=true;
 
-  SDL_FRect r1,r2;
-  SDL_FRect result;
-
-  Point p1;
-  Point p2;
+  Point[] mPoints;
 
   Stick s1;
+
+  Box b1;
 
   this(string title){
     // Create na SDL Window
@@ -196,16 +229,16 @@ struct Application{
 
 
   void Setup(){
-    // Make two rectangles
-    r1 = MakeRectangle(50,50,100,100);
-    r2 = MakeRectangle(50,50,100,100);
-    p1 = Point(310,240,g.forceX,g.forceY,1.0f);
-    p2 = Point(330,240,g.forceX,g.forceY,1.0f);
+    // Populate a few points
+    mPoints ~= Point(310,240,g.forceX,g.forceY,1.0f);
+    mPoints ~= Point(330,240,g.forceX,g.forceY,1.0f);
 
     s1=Stick(
-         Point(310,250,g.forceX,g.forceY,2.0f),
-         Point(350,250,g.forceX,g.forceY,2.0f),
+         new Point(310,250,g.forceX,g.forceY,2.0f),
+         new Point(350,250,g.forceX,g.forceY,2.0f),
         );
+
+    b1 = Box(0,0,20,20);
   }
 
   void Input(){
@@ -218,53 +251,42 @@ struct Application{
         writeln("Exit event triggered");
         mGameIsRunning= false;
       }
-      if(event.type == SDL_EVENT_KEY_DOWN){
-        writeln("Pressed a key ");
+      if(event.type == SDL_EVENT_MOUSE_BUTTON_DOWN){
+        float mouseX,mouseY;
+        SDL_GetMouseState(&mouseX,&mouseY);
+        writeln("Adding a new point");
+        float vx = uniform(0,300,rnd)-150; 
+        float vy = uniform(0,300,rnd)-150;
+        float mass = uniform(1,10,rnd);
+        mPoints ~= Point(mouseX,mouseY,vx,vy,mass);
       }
     }
   }
 
 
   void Update(){
-    p1.Update(g.deltaTime/1000);
-    p2.Update(g.deltaTime/1000);
+    foreach(ref p ; mPoints){
+      p.Update(g.deltaTime/1000);
+      p.Constrain();
+    }
     s1.Update(g.deltaTime/1000);
+    b1.Update(g.deltaTime/1000);
 
-    p1.Constrain();
-    p2.Constrain();
   }
 
   void Render(){
-    // Store mouse positions
-    float mouseX,mouseY;
-    SDL_GetMouseState(&mouseX,&mouseY);
-    r2.x = mouseX;
-    r2.y = mouseY;
-
 
     // Set the render draw color 
-    SDL_SetRenderDrawColor(mRenderer,100,190,255,SDL_ALPHA_OPAQUE);
+    SDL_SetRenderDrawColor(mRenderer,0,0,0,SDL_ALPHA_OPAQUE);
     // Clear the mRenderer each time we render
     SDL_RenderClear(mRenderer);
 
-
-    // Draw the rectangles
-    if(SDL_GetRectIntersectionFloat(&r1,&r2,&result)){
-      // Fill in rectangle
-      SDL_SetRenderDrawColor(mRenderer,255,255,255,SDL_ALPHA_OPAQUE);
-      SDL_RenderFillRect(mRenderer, &result);
-      // Set color of rectangles otherwise
-      SDL_SetRenderDrawColor(mRenderer,255,0,0,SDL_ALPHA_OPAQUE);
-    }else{
-      SDL_SetRenderDrawColor(mRenderer,0,255,0,SDL_ALPHA_OPAQUE);
+    foreach(ref p ; mPoints){
+      p.Render(mRenderer);
     }
-    SDL_RenderRect(mRenderer, &r1);
-    SDL_RenderRect(mRenderer, &r2);
-
-    p1.Render(mRenderer);
-    p2.Render(mRenderer);
 
     s1.Render(mRenderer);
+    b1.Render(mRenderer);
 
     // Final step is to present what we have copied into
     // video memory
